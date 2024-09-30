@@ -27,6 +27,12 @@ Build to wasm:
 
 See the makefile for more info.
 
+Contributors welcome!
+
+### Documentation
+
+See [docs](docs.md).
+
 ### To do list (probably outdated)
 
 To do:
