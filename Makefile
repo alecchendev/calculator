@@ -42,3 +42,13 @@ test: build-test
 
 wasm:
 	emcc src/lib.c -o website/lib.js -s EXPORTED_FUNCTIONS='["_exported_execute_line"]' -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]'
+
+deploy:
+	git checkout gh-pages
+	git rebase main
+	make wasm
+	mv website/* .
+	git add .
+	git commit -m "Deploy site"
+	git push -f
+	git checkout main
