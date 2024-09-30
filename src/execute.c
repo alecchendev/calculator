@@ -19,8 +19,8 @@ Math with units: 1km/2s*3km+4km^2s^-1\n\
 Convert units: 10 m/s^2 -> km/h^2\n\
 Auto-convert units: 10 km - 2 m + 12 mi\n\
 Variables: x = 9 + 10\n\
-Custom units: 1 pentameter -> 5 m\n\
-Unit aliases: n = kg m s^-2";
+Unit aliases: n = kg m s^-2\n\
++See docs for more info.";
 
 bool execute_line(const char *input, char *output, size_t output_len, Memory *mem, Arena *repl_arena) {
     Arena arena = arena_create();
