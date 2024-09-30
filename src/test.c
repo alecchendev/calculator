@@ -629,7 +629,11 @@ typedef struct {
 void test_display_unit(void *case_idx_opaque) {
     Arena arena = arena_create();
     DisplayUnitCase cases[] = {
+#ifdef DEBUG
         {unit_new_none(&arena), "none"},
+#else
+        {unit_new_none(&arena), ""},
+#endif
         {unit_new_single(UNIT_MINUTE, 1, &arena), "min"},
         {unit_new_single(UNIT_CENTIMETER, 2, &arena), "cm^2"},
         {unit_new_single(UNIT_KILOGRAM, -2, &arena), "kg^-2"},
