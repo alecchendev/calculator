@@ -46,6 +46,7 @@ wasm:
 deploy:
 	git checkout gh-pages
 	git rebase main
+	git reset --hard HEAD~1
 	make wasm
 	mv website/* .
 	git add .
