@@ -7,6 +7,7 @@
 #include "hash_map.c"
 #include "memory.c"
 #include "parse.c"
+#include "string.c"
 #include "tokenize.c"
 #include "debug.c"
 #include "unit.c"
@@ -220,7 +221,7 @@ void test_parse_case(void *c_opaque) {
     debug("Got:\n");
     display_expr(0, expr, &arena);
     assert(exprs_equal(expr, c->expected, &arena));
-    ErrorString err = err_empty();
+    String err = string_empty(&arena);
     assert(check_valid_expr(expr, &err, &arena));
     arena_free(&arena);
 }
@@ -334,7 +335,7 @@ void test_invalid_expr_case(void *c_opaque) {
     Memory mem = memory_new(&arena);
     TokenString tokens = tokenize(c->input, &arena);
     Expression expr = parse(tokens, mem, &arena);
-    ErrorString err = err_empty();
+    String err = string_empty(&arena);
     assert(!check_valid_expr(expr, &err, &arena));
     arena_free(&arena);
 }
@@ -383,7 +384,7 @@ void test_check_unit_case(void *c_opaque) {
     TokenString tokens = tokenize(c->input, &arena);
     Expression expr = parse(tokens, mem, &arena);
     display_expr(0, expr, &arena);
-    ErrorString err = err_empty();
+    String err = string_empty(&arena);
     /*assert(check_valid_expr(expr, &err, &arena));*/
     Unit unit = check_unit(expr, mem, &err, &arena);
     assert(units_equal(unit, c->expected, &arena));
@@ -453,7 +454,7 @@ void test_evaluate_case(void *c_opaque) {
     TokenString tokens = tokenize(c->input, &arena);
     Expression expr = parse(tokens, mem, &arena);
     display_expr(0, expr, &arena);
-    ErrorString err = err_empty();
+    String err = string_empty(&arena);
     assert(check_valid_expr(expr, &err, &arena));
     assert(!is_unit_unknown(check_unit(expr, mem, &err, &arena)));
     double result = evaluate(expr, mem, &err, &arena);
@@ -548,7 +549,7 @@ void test_memory_case(void *c_opaque) {
         Expression expr = parse(tokens, mem, &line_arena);
         substitute_variables(&expr, mem);
         display_expr(0, expr, &line_arena);
-        ErrorString err = err_empty();
+        String err = string_empty(&line_arena);
         assert(check_valid_expr(expr, &err, &line_arena));
         if (expr.type == EXPR_SET_VAR) {
             unsigned char * var_name = expr.expr.binary_expr.left->expr.var_name;

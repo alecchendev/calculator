@@ -29,9 +29,9 @@ bool execute_line(const char *input, char *output, size_t output_len, Memory *me
     substitute_variables(&expr, *mem);
     display_expr(0, expr, &arena);
     bool quit = false;
-    ErrorString err = err_empty();
+    String err = string_empty(&arena);
     if (!check_valid_expr(expr, &err, &arena)) {
-        memcpy(output, err.msg, err.len);
+        memcpy(output, err.s, err.len);
     } else if (expr.type == EXPR_EMPTY) {
         memset(output, 0, output_len);
     } else if (expr.type == EXPR_HELP) {
@@ -48,12 +48,12 @@ bool execute_line(const char *input, char *output, size_t output_len, Memory *me
         Expression value = *expr.expr.binary_expr.right;
         Unit unit = check_unit(value, *mem, &err, &arena);
         if (is_unit_unknown(unit)) {
-            memcpy(output, err.msg, err.len);
+            memcpy(output, err.s, err.len);
         } else {
             if (expr_is_number(value.type)) {
                 double result = evaluate(value, *mem, &err, &arena);
                 if (err.len > 0) {
-                    memcpy(output, err.msg, err.len);
+                    memcpy(output, err.s, err.len);
                 } else {
                     value = expr_new_const_unit(result, expr_new_unit_full(unit, repl_arena),
                         repl_arena);
@@ -70,11 +70,11 @@ bool execute_line(const char *input, char *output, size_t output_len, Memory *me
     } else {
         Unit unit = check_unit(expr, *mem, &err, &arena);
         if (is_unit_unknown(unit)) {
-            memcpy(output, err.msg, err.len);
+            memcpy(output, err.s, err.len);
         } else if (expr_is_number(expr.type)) {
             double result = evaluate(expr, *mem, &err, &arena);
             if (err.len > 0) {
-                memcpy(output, err.msg, err.len);
+                memcpy(output, err.s, err.len);
             } else {
                 snprintf(output, output_len, "%g %s", result, display_unit(unit, &arena));
             }

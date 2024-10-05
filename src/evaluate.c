@@ -6,45 +6,6 @@
 #include "memory.c"
 #include "unit.c"
 
-
-typedef struct ErrorString ErrorString;
-struct ErrorString {
-    char *msg;
-    size_t len;
-};
-
-ErrorString err_empty() {
-    return (ErrorString) { .msg = NULL, .len = 0 };
-}
-
-// Basically printf for an error string!
-ErrorString err_new(Arena *arena, const char *fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-
-    // Determine required size
-    va_list ap_dup;
-    va_copy(ap_dup, ap);
-    int size = vsnprintf(NULL, 0, fmt, ap_dup);
-    va_end(ap_dup);
-
-    if (size < 0) {
-        va_end(ap);
-        return err_empty();
-    }
-
-    // Allocate and write string
-    ErrorString err = err_empty();
-    err.len = size + 1;
-    err.msg = arena_alloc(arena, err.len);
-
-    int ret = vsnprintf(err.msg, err.len, fmt, ap);
-    va_end(ap);
-    assert(ret != -1);
-
-    return err;
-}
-
 void substitute_variables(Expression *expr, Memory mem) {
     if (expr->type == EXPR_VAR && memory_contains_var(mem, expr->expr.var_name)) {
         debug("Substituting variable: %s\n", expr->expr.var_name);
@@ -80,7 +41,7 @@ const char invalid_math_msg[] = "Expected to %s two numbers, instead got left: %
 const char invalid_pow_msg[] = "Expected to raise unit to degree, instead got left: %s right: %s";
 const char invalid_set_var_msg[] = "Expected to set variable, instead got left: %s right: %s";
 
-bool check_valid_expr(Expression expr, ErrorString *err, Arena *arena) {
+bool check_valid_expr(Expression expr, String *err, Arena *arena) {
     if (err->len > 0) return false;
     bool left_valid = false;
     bool right_valid = false;
@@ -94,7 +55,7 @@ bool check_valid_expr(Expression expr, ErrorString *err, Arena *arena) {
             if (right_type == EXPR_CONSTANT || right_type == EXPR_NEG || right_type == EXPR_CONST_UNIT) {
                 return true;
             }
-            *err = err_new(arena, invalid_neg_msg, display_expr_op(right_type));
+            *err = string_new_fmt(arena, invalid_neg_msg, display_expr_op(right_type));
             return false;
         case EXPR_CONST_UNIT: case EXPR_COMP_UNIT: case EXPR_ADD: case EXPR_SUB:
         case EXPR_MUL: case EXPR_DIV: case EXPR_CONVERT: case EXPR_POW: case EXPR_DIV_UNIT:
@@ -108,7 +69,7 @@ bool check_valid_expr(Expression expr, ErrorString *err, Arena *arena) {
         case EXPR_EMPTY: case EXPR_QUIT: case EXPR_HELP: case EXPR_MEMORY:
             return true;
         case EXPR_INVALID:
-            *err = err_new(arena, invalid_expr_msg);
+            *err = string_new_fmt(arena, invalid_expr_msg);
             return false;
     }
     if (!left_valid || !right_valid) {
@@ -123,14 +84,14 @@ bool check_valid_expr(Expression expr, ErrorString *err, Arena *arena) {
                 left_type == EXPR_NEG) && (expr_is_unit(right_type))) {
                 return true;
             }
-            *err = err_new(arena, invalid_const_unit_msg,
+            *err = string_new_fmt(arena, invalid_const_unit_msg,
                 display_expr_op(left_type), display_expr_op(right_type));
             return false;
         case EXPR_DIV_UNIT:
             if (expr_is_unit(left_type) && expr_is_unit(right_type)) {
                 return true;
             }
-            *err = err_new(arena, invalid_div_unit_msg,
+            *err = string_new_fmt(arena, invalid_div_unit_msg,
                 display_expr_op(left_type), display_expr_op(right_type));
             return false;
         case EXPR_COMP_UNIT:
@@ -138,7 +99,7 @@ bool check_valid_expr(Expression expr, ErrorString *err, Arena *arena) {
                 (right_type == EXPR_UNIT || right_type == EXPR_POW)) {
                 return true;
             }
-            *err = err_new(arena, invalid_comp_unit_msg,
+            *err = string_new_fmt(arena, invalid_comp_unit_msg,
                 display_expr_op(left_type), display_expr_op(right_type));
             return false;
         case EXPR_ADD: case EXPR_SUB: case EXPR_MUL: case EXPR_DIV:
@@ -146,14 +107,14 @@ bool check_valid_expr(Expression expr, ErrorString *err, Arena *arena) {
                 (expr.type == EXPR_DIV && expr_is_unit(left_type) && expr_is_unit(right_type))) {
                 return true;
             }
-            *err = err_new(arena, invalid_math_msg, display_expr_op(expr.type),
+            *err = string_new_fmt(arena, invalid_math_msg, display_expr_op(expr.type),
                 display_expr_op(left_type), display_expr_op(right_type));
             return false;
         case EXPR_CONVERT:
             if (expr_is_number(left_type) && expr_is_unit(right_type)) {
                 return true;
             }
-            *err = err_new(arena, invalid_math_msg, display_expr_op(expr.type),
+            *err = string_new_fmt(arena, invalid_math_msg, display_expr_op(expr.type),
                 display_expr_op(left_type), display_expr_op(right_type));
             return false;
         case EXPR_POW:
@@ -161,7 +122,7 @@ bool check_valid_expr(Expression expr, ErrorString *err, Arena *arena) {
                 || right_type == EXPR_NEG || right_type == EXPR_CONST_UNIT)) {
                 return true;
             }
-            *err = err_new(arena, invalid_pow_msg,
+            *err = string_new_fmt(arena, invalid_pow_msg,
                 display_expr_op(left_type), display_expr_op(right_type));
             return false;
         case EXPR_SET_VAR:
@@ -169,7 +130,7 @@ bool check_valid_expr(Expression expr, ErrorString *err, Arena *arena) {
                 expr_is_unit(right_type))) {
                 return true;
             }
-            *err = err_new(arena, invalid_set_var_msg,
+            *err = string_new_fmt(arena, invalid_set_var_msg,
                 display_expr_op(left_type), display_expr_op(right_type));
             return false;
         default:
@@ -183,21 +144,21 @@ const char unknown_convert_msg[] = "Convert invalid, unknown units: From: %s To:
 const char neq_length_msg[] = "Convert invalid: lengths not equal: From: %s To: %s";
 const char general_bad_convert_msg[] = "Convert invalid: From: %s To %s";
 
-bool unit_convert_valid(Unit a, Unit b, ErrorString *err, Arena *arena) {
+bool unit_convert_valid(Unit a, Unit b, String *err, Arena *arena) {
     if (is_unit_none(a) != is_unit_none(b)) {
-        *err = err_new(arena, none_convert_msg,
+        *err = string_new_fmt(arena, none_convert_msg,
             display_unit(a, arena), display_unit(b, arena));
         return false;
     }
     if (is_unit_unknown(a) || is_unit_unknown(b)) {
         return false;
-        *err = err_new(arena, unknown_convert_msg,
+        *err = string_new_fmt(arena, unknown_convert_msg,
             display_unit(a, arena), display_unit(b, arena));
         return false;
     }
     if (a.length != b.length) {
         // Just reusing instead of a separate double const
-        *err = err_new(arena, neq_length_msg,
+        *err = string_new_fmt(arena, neq_length_msg,
             display_unit(a, arena), display_unit(b, arena));
         return false;
     }
@@ -213,15 +174,15 @@ bool unit_convert_valid(Unit a, Unit b, ErrorString *err, Arena *arena) {
         all_convertible &= convertible;
     }
     if (!all_convertible) {
-        *err = err_new(arena, general_bad_convert_msg,
+        *err = string_new_fmt(arena, general_bad_convert_msg,
             display_unit(a, arena), display_unit(b, arena));
     }
     return all_convertible;
 }
 
-double evaluate(Expression expr, Memory mem, ErrorString *err, Arena *arena);
+double evaluate(Expression expr, Memory mem, String *err, Arena *arena);
 
-Unit check_unit(Expression expr, Memory mem, ErrorString *err, Arena *arena) {
+Unit check_unit(Expression expr, Memory mem, String *err, Arena *arena) {
     if (expr.type == EXPR_CONSTANT) {
         debug("constant: %lf\n", expr.expr.constant);
         return unit_new_none(arena);
@@ -231,7 +192,7 @@ Unit check_unit(Expression expr, Memory mem, ErrorString *err, Arena *arena) {
     } else if (expr.type == EXPR_VAR) {
         debug("var: %s\n", expr.expr.var_name);
         if (!memory_contains_var(mem, expr.expr.var_name)) {
-            *err = err_new(arena, "Variable not defined: %s", expr.expr.var_name);
+            *err = string_new_fmt(arena, "Variable not defined: %s", expr.expr.var_name);
             return unit_new_unknown(arena);
         }
         Expression var_expr = memory_get_var(mem, expr.expr.var_name);
@@ -255,7 +216,7 @@ Unit check_unit(Expression expr, Memory mem, ErrorString *err, Arena *arena) {
         unit = unit_new_unknown(arena);
     } else if (expr.type == EXPR_POW) {
         if (is_unit_none(left) || !is_unit_none(right)) {
-            *err = err_new(arena, "Expected single degree unit ^ constant: %s ^ %s",
+            *err = string_new_fmt(arena, "Expected single degree unit ^ constant: %s ^ %s",
                 display_unit(left, arena), display_unit(right, arena));
             return unit_new_unknown(arena);
         }
@@ -292,7 +253,7 @@ Unit check_unit(Expression expr, Memory mem, ErrorString *err, Arena *arena) {
         debug("combining units for comp\n");
         unit = unit_combine(left, right, true, arena);
         if (is_unit_unknown(unit)) {
-            *err = err_new(arena, "Cannot compose units of same category: Left: %s Right: %s",
+            *err = string_new_fmt(arena, "Cannot compose units of same category: Left: %s Right: %s",
                 display_unit(left, arena), display_unit(right, arena));
         }
     } else if (expr.type == EXPR_DIV || expr.type == EXPR_DIV_UNIT) {
@@ -304,14 +265,14 @@ Unit check_unit(Expression expr, Memory mem, ErrorString *err, Arena *arena) {
         }
         unit = unit_combine(left, right_dup, false, arena);
     } else {
-        *err = err_new(arena, "Units do not match: %s %s %s", display_unit(left, arena),
+        *err = string_new_fmt(arena, "Units do not match: %s %s %s", display_unit(left, arena),
            display_expr_op(expr.type), display_unit(right, arena));
         unit = unit_new_unknown(arena);
     }
     return unit;
 }
 
-double evaluate(Expression expr, Memory mem, ErrorString *err, Arena *arena) {
+double evaluate(Expression expr, Memory mem, String *err, Arena *arena) {
     double left = 0;
     double right = 0;
     Unit left_unit, right_unit;
@@ -359,7 +320,7 @@ double evaluate(Expression expr, Memory mem, ErrorString *err, Arena *arena) {
             return left * right;
         case EXPR_DIV:
             if (right == 0) {
-                *err = err_new(arena, "Cannot divide by zero");
+                *err = string_new_fmt(arena, "Cannot divide by zero");
                 return 0;
             }
             return left / right;
