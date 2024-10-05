@@ -120,13 +120,9 @@ Token next_token(const char *input, size_t *pos, size_t length, Arena *arena) {
         if (strnlen(string_token, 7) == 6 && strncmp(string_token, "memory", 6) == 0) {
             return memory_token;
         }
-        for (size_t unit = 0; unit < UNIT_COUNT; unit++) {
-            const char *unit_str = unit_strings[unit];
-            const size_t len = strnlen(unit_str, MAX_UNIT_STRING + 1);
-            const size_t str_len = strnlen(string_token, MAX_UNIT_STRING + 1);
-            if (str_len == len && strncmp(string_token, unit_str, len + 1) == 0) {
-                return token_new_unit(unit);
-            }
+        UnitType unit = string_to_unit(string_token);
+        if (unit != UNIT_UNKNOWN) {
+            return token_new_unit(unit);
         }
         return token_new_variable(string_token, arena);
     }

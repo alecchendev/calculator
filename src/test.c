@@ -149,6 +149,13 @@ void test_tokenize(void *case_idx_opaque) {
         {"x = 4", 3, {token_new_variable("x", &case_arena), equals_token, token_new_num(4)}},
         {"aSd4_f8", 1, {token_new_variable("aSd4_f8", &case_arena)}},
         {"aS&4_f8", 2, {token_new_variable("aS", &case_arena), invalid_token}},
+        // Some units
+        {"s sec secs second seconds", 5, {token_new_unit(UNIT_SECOND),
+            token_new_unit(UNIT_SECOND), token_new_unit(UNIT_SECOND),
+            token_new_unit(UNIT_SECOND), token_new_unit(UNIT_SECOND)}},
+        {"lb lbs pound pounds", 4, {token_new_unit(UNIT_POUND),
+            token_new_unit(UNIT_POUND), token_new_unit(UNIT_POUND),
+            token_new_unit(UNIT_POUND)}},
         // TODO: more comprehensive
     };
     const size_t num_cases = sizeof(cases) / sizeof(TokenCase);

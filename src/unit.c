@@ -55,6 +55,47 @@ const char *unit_strings[] = {
     "unknown",
 };
 
+bool string_in_set(char *s, char *set[], size_t set_len) {
+    size_t len = strnlen(s, 32);
+    for (size_t i = 0; i < set_len; i++) {
+        char *curr = set[i];
+        size_t curr_len = strnlen(curr, 32);
+        if (curr_len != len) continue;
+        if (strncmp(s, curr, len) == 0) return true;
+    }
+    return false;
+}
+
+UnitType string_to_unit(char *s) {
+    char *cms[] = {"cm", "centimeter", "centimeters"};
+    char *ms[] = {"m", "meter", "meters"};
+    char *kms[] = {"km", "kilometer", "kilometers"};
+    char *ins[] = {"in", "inch", "inches"};
+    char *fts[] = {"ft", "foot", "feet"};
+    char *mis[] = {"mi", "mile", "miles"};
+    char *secs[] = {"s", "sec", "secs", "second", "seconds"};
+    char *mins[] = {"min", "mins", "minute", "minutes"};
+    char *hrs[] = {"h", "hr", "hrs", "hour", "hours"};
+    char *gs[] = {"g", "gram", "grams"};
+    char *kgs[] = {"kg", "kilogram", "kilograms"};
+    char *lbs[] = {"lb", "lbs", "pound", "pounds"};
+    char *ozs[] = {"oz", "ozs", "ounce", "ounces"};
+    if (string_in_set(s, cms, 3)) return UNIT_CENTIMETER;
+    if (string_in_set(s, ms, 3)) return UNIT_METER;
+    if (string_in_set(s, kms, 3)) return UNIT_KILOMETER;
+    if (string_in_set(s, ins, 3)) return UNIT_INCH;
+    if (string_in_set(s, fts, 3)) return UNIT_FOOT;
+    if (string_in_set(s, mis, 3)) return UNIT_MILE;
+    if (string_in_set(s, secs, 5)) return UNIT_SECOND;
+    if (string_in_set(s, mins, 4)) return UNIT_MINUTE;
+    if (string_in_set(s, hrs, 5)) return UNIT_HOUR;
+    if (string_in_set(s, gs, 3)) return UNIT_GRAM;
+    if (string_in_set(s, kgs, 3)) return UNIT_KILOGRAM;
+    if (string_in_set(s, lbs, 4)) return UNIT_POUND;
+    if (string_in_set(s, ozs, 4)) return UNIT_OUNCE;
+    return UNIT_UNKNOWN;
+}
+
 typedef enum UnitCategory UnitCategory;
 enum UnitCategory {
     UNIT_CATEGORY_DISTANCE,

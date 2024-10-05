@@ -97,7 +97,8 @@ You cannot set a bulitin unit as a variable/unit alias: km = lb
 
 ### All currently supported units
 
-Currently full unit names are not supported, only the abbreviations.
+Only the abbreviations are documented here, but full unit names are also supported,
+e.g. lb -> pound(s), km -> kilometer(s). See source code for an exhaustive list.
 
 Distance: cm, m, km, in, ft, mi
 
