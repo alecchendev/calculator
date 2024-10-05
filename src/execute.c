@@ -22,36 +22,43 @@ Variables: x = 9 + 10\n\
 Unit aliases: n = kg m s^-2\n\
 See docs for more info.";
 
-bool execute_line(const char *input, char *output, size_t output_len, Memory *mem, Arena *repl_arena) {
-    Arena arena = arena_create();
-    TokenString tokens = tokenize(input, &arena);
-    Expression expr = parse(tokens, *mem, &arena);
-    substitute_variables(&expr, *mem);
-    display_expr(0, expr, &arena);
-    bool quit = false;
-    String err = string_empty(&arena);
-    if (!check_valid_expr(expr, &err, &arena)) {
-        memcpy(output, err.s, err.len);
-    } else if (expr.type == EXPR_EMPTY) {
+bool execute_line_inner(const char *input, char *output, size_t output_len, Memory *mem, Arena *repl_arena, Arena *arena) {
+    TokenString tokens = tokenize(input, arena);
+
+    if (tokens.length == 0) {
         memset(output, 0, output_len);
-    } else if (expr.type == EXPR_HELP) {
+        return false;
+    }
+    if (tokens.length == 1 && tokens.tokens[0].type == TOK_QUIT) {
+        memset(output, 0, output_len);
+        return true;
+    }
+    if (tokens.length == 1 && tokens.tokens[0].type == TOK_HELP) {
         memcpy(output, help_msg, sizeof(help_msg));
-    } else if (expr.type == EXPR_MEMORY) {
-        String memory_str = memory_show(*mem, &arena);
+        return false;
+    }
+    if (tokens.length == 1 && tokens.tokens[0].type == TOK_MEMORY) {
+        String memory_str = memory_show(*mem, arena);
         memcpy(output, memory_str.s, memory_str.len);
-    } else if (expr.type == EXPR_QUIT) {
-        memset(output, 0, output_len);
-        quit = true;
+        return false;
+    }
+
+    Expression expr = parse(tokens, *mem, arena);
+    substitute_variables(&expr, *mem);
+    display_expr(0, expr, arena);
+    String err = string_empty(arena);
+    if (!check_valid_expr(expr, &err, arena)) {
+        memcpy(output, err.s, err.len);
     } else if (expr.type == EXPR_SET_VAR) {
         memset(output, 0, output_len);
         unsigned char * var_name = expr.expr.binary_expr.left->expr.var_name;
         Expression value = *expr.expr.binary_expr.right;
-        Unit unit = check_unit(value, *mem, &err, &arena);
+        Unit unit = check_unit(value, *mem, &err, arena);
         if (is_unit_unknown(unit)) {
             memcpy(output, err.s, err.len);
         } else {
             if (expr_is_number(value.type)) {
-                double result = evaluate(value, *mem, &err, &arena);
+                double result = evaluate(value, *mem, &err, arena);
                 if (err.len > 0) {
                     memcpy(output, err.s, err.len);
                 } else {
@@ -62,26 +69,32 @@ bool execute_line(const char *input, char *output, size_t output_len, Memory *me
                 value = expr_new_unit_full(unit, repl_arena);
             }
             if (err.len == 0) {
-                String msg = display_var(var_name, value, false, &arena);
+                String msg = display_var(var_name, value, false, arena);
                 memcpy(output, msg.s, msg.len);
                 memory_add_var(mem, var_name, value, repl_arena);
             }
         }
     } else {
-        Unit unit = check_unit(expr, *mem, &err, &arena);
+        Unit unit = check_unit(expr, *mem, &err, arena);
         if (is_unit_unknown(unit)) {
             memcpy(output, err.s, err.len);
         } else if (expr_is_number(expr.type)) {
-            double result = evaluate(expr, *mem, &err, &arena);
+            double result = evaluate(expr, *mem, &err, arena);
             if (err.len > 0) {
                 memcpy(output, err.s, err.len);
             } else {
-                snprintf(output, output_len, "%g %s", result, display_unit(unit, &arena));
+                snprintf(output, output_len, "%g %s", result, display_unit(unit, arena));
             }
         } else {
-            snprintf(output, output_len, "%s", display_unit(unit, &arena));
+            snprintf(output, output_len, "%s", display_unit(unit, arena));
         }
     }
+    return false;
+}
+
+bool execute_line(const char *input, char *output, size_t output_len, Memory *mem, Arena *repl_arena) {
+    Arena arena = arena_create();
+    bool quit = execute_line_inner(input, output, output_len, mem, repl_arena, &arena);
     arena_free(&arena);
     return quit;
 }

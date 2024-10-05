@@ -208,16 +208,16 @@ struct TokenString {
 };
 
 TokenString tokenize(const char *input, Arena *arena) {
-    TokenString token_string;
-    token_string.tokens = arena_alloc(arena, sizeof(Token) * MAX_INPUT);
-    token_string.length = 0;
+    TokenString tokens;
+    tokens.tokens = arena_alloc(arena, sizeof(Token) * MAX_INPUT);
+    tokens.length = 0;
     bool done = false;
     size_t pos = 0;
     size_t input_length = strnlen(input, MAX_INPUT + 1);
     if (input_length > MAX_INPUT) {
-        token_string.tokens[0] = invalid_token;
-        token_string.length = 1;
-        return token_string;
+        tokens.tokens[0] = invalid_token;
+        tokens.length = 1;
+        return tokens;
     }
     while (!done) {
         Token token = next_token(input, &pos, input_length, arena);
@@ -226,10 +226,13 @@ TokenString tokenize(const char *input, Arena *arena) {
         } else if (token.type == TOK_WHITESPACE) {
             continue;
         }
-        token_string.tokens[token_string.length] = token;
-        token_string.length++;
+        tokens.tokens[tokens.length] = token;
+        tokens.length++;
     }
-    return token_string;
+    if (tokens.length > 0 && tokens.tokens[tokens.length - 1].type == TOK_END) {
+        tokens.length -= 1;
+    }
+    return tokens;
 }
 
 void token_display(Token token) {

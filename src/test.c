@@ -109,45 +109,45 @@ void test_tokenize(void *case_idx_opaque) {
     char max_len_input[MAX_INPUT + 1] = {0};
     memset(max_len_input, 'x', MAX_INPUT + 1);
     TokenCase cases[] = {
-        {"", 1, {end_token}},
-        {"1", 2, {token_new_num(1), end_token}},
-        {"1 + 2", 4, {token_new_num(1), add_token, token_new_num(2), end_token}},
-        {"\t 1\t+     2  ", 4, {token_new_num(1), add_token, token_new_num(2), end_token}},
-        {"1 - 2 * 3 / 4", 8, {
+        {"", 0, {}},
+        {"1", 1, {token_new_num(1)}},
+        {"1 + 2", 3, {token_new_num(1), add_token, token_new_num(2)}},
+        {"\t 1\t+     2  ", 3, {token_new_num(1), add_token, token_new_num(2)}},
+        {"1 - 2 * 3 / 4", 7, {
             token_new_num(1), sub_token, token_new_num(2), mul_token,
-            token_new_num(3), div_token, token_new_num(4), end_token
+            token_new_num(3), div_token, token_new_num(4)
         }},
-        {"45.874", 2, {token_new_num(45.874), end_token}},
-        {"2e3", 2, {token_new_num(2000), end_token}},
-        {"3.32e2", 2, {token_new_num(332), end_token}},
-        {"3.32E2", 2, {token_new_num(332), end_token}},
+        {"45.874", 1, {token_new_num(45.874)}},
+        {"2e3", 1, {token_new_num(2000)}},
+        {"3.32e2", 1, {token_new_num(332)}},
+        {"3.32E2", 1, {token_new_num(332)}},
         {"3.32e-2", 1, {invalid_token}}, // TODO: handle negatives generally + in scientific notation?
-        {"asdf", 2, {token_new_variable("asdf", &case_arena), end_token}},
+        {"asdf", 1, {token_new_variable("asdf", &case_arena)}},
         {"quit", 1, {quit_token}},
         {"exit", 1, {quit_token}},
-        {"quitX", 2, {token_new_variable("quitX", &case_arena), end_token}},
+        {"quitX", 1, {token_new_variable("quitX", &case_arena)}},
         {max_len_input, 1, {invalid_token}},
         // Units
-        {"3 cm + 5.5min", 6, {
+        {"3 cm + 5.5min", 5, {
             token_new_num(3), token_new_unit(UNIT_CENTIMETER), add_token,
-            token_new_num(5.5), token_new_unit(UNIT_MINUTE), end_token
+            token_new_num(5.5), token_new_unit(UNIT_MINUTE)
         }},
-        {"1 mi / h", 5, {
+        {"1 mi / h", 4, {
             token_new_num(1), token_new_unit(UNIT_MILE), div_token,
-            token_new_unit(UNIT_HOUR), end_token
+            token_new_unit(UNIT_HOUR)
         }},
-        {"->", 2, {convert_token, end_token}},
-        {"4.5 - 3 km -> mi", 7, {token_new_num(4.5), sub_token, token_new_num(3),
+        {"->", 1, {convert_token}},
+        {"4.5 - 3 km -> mi", 6, {token_new_num(4.5), sub_token, token_new_num(3),
             token_new_unit(UNIT_KILOMETER), convert_token, token_new_unit(UNIT_MILE),
             end_token}},
-        {"50km^2", 5, {token_new_num(50), token_new_unit(UNIT_KILOMETER), caret_token, token_new_num(2), end_token}},
-        {"50 km ^ 2", 5, {token_new_num(50), token_new_unit(UNIT_KILOMETER), caret_token, token_new_num(2), end_token}},
-        {"- 50 kg^2km ^-2", 10, {
+        {"50km^2", 4, {token_new_num(50), token_new_unit(UNIT_KILOMETER), caret_token, token_new_num(2)}},
+        {"50 km ^ 2", 4, {token_new_num(50), token_new_unit(UNIT_KILOMETER), caret_token, token_new_num(2)}},
+        {"- 50 kg^2km ^-2", 9, {
             sub_token, token_new_num(50), token_new_unit(UNIT_KILOGRAM), caret_token, token_new_num(2),
-            token_new_unit(UNIT_KILOMETER), caret_token, sub_token, token_new_num(2), end_token
+            token_new_unit(UNIT_KILOMETER), caret_token, sub_token, token_new_num(2)
         }},
-        {"x = 4", 4, {token_new_variable("x", &case_arena), equals_token, token_new_num(4), end_token}},
-        {"aSd4_f8", 2, {token_new_variable("aSd4_f8", &case_arena), end_token}},
+        {"x = 4", 3, {token_new_variable("x", &case_arena), equals_token, token_new_num(4)}},
+        {"aSd4_f8", 1, {token_new_variable("aSd4_f8", &case_arena)}},
         {"aS&4_f8", 2, {token_new_variable("aS", &case_arena), invalid_token}},
         // TODO: more comprehensive
     };
