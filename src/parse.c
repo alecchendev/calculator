@@ -76,11 +76,11 @@ Expression parse(TokenString tokens, Memory mem, Arena *arena) {
     debug("Parsing expression\n");
     debug("Tokens: %zu\n", tokens.length);
     for (size_t i = 0; i < tokens.length; i++) {
-        token_display(tokens.tokens[i]);
+        token_display(tokens.tokens[i], arena);
     }
     if (tokens.length == 0) {
         debug("empty\n");
-        return invalid_expr;
+        return expr_new_invalid(string_new("Empty expression", arena));
     }
     if (tokens.length == 1 && tokens.tokens[0].type == TOK_UNIT) {
         debug("unit\n");
@@ -95,9 +95,11 @@ Expression parse(TokenString tokens, Memory mem, Arena *arena) {
         return expr_new_var(tokens.tokens[0].var_name, arena);
     }
     if (tokens.length == 1) {
-        debug("Invalid expression token length 1:\n");
-        token_display(tokens.tokens[0]);
-        return invalid_expr;
+        String err_msg = string_new_fmt(arena,
+            "Word is invalid in this context: \"%s\"",
+            token_string(tokens.tokens[0], arena).s);
+        debug("Invalid expression token length 1: %s\n", err_msg.s);
+        return expr_new_invalid(err_msg);
     }
 
     // Find the thing we should parse next
@@ -148,7 +150,9 @@ Expression parse(TokenString tokens, Memory mem, Arena *arena) {
     } else if (op == TOK_EQUALS) {
         type = EXPR_SET_VAR;
     } else {
-        return invalid_expr;
+        return expr_new_invalid(string_new_fmt(arena,
+            "Expected binary operator, found: %s",
+            token_string(tokens.tokens[op_idx], arena).s));
     }
 
     // Most binary expression omit the current token,

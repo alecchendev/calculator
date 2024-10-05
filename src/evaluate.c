@@ -30,7 +30,7 @@ void substitute_variables(Expression *expr, Memory mem) {
 // like this. TODO: show user the block of tokens
 // where they messed up, and it'll probably be
 // obvious.
-const char invalid_expr_msg[] = "Invalid expression, unknown reason";
+const char invalid_expr_msg[] = "Invalid expression: %s";
 const char invalid_neg_msg[] = "Negation expected right side to be constant, negation, or constant with unit, instead got: %s";
 const char invalid_const_unit_msg[] = "Expected to combine constant with unit, instead got left: %s right: %s";
 const char invalid_div_unit_msg[] = "Expected to divide two units, instead got left: %s right: %s";
@@ -65,7 +65,7 @@ bool check_valid_expr(Expression expr, String *err, Arena *arena) {
             right_valid = check_valid_expr(*expr.expr.binary_expr.right, err, arena);
             break;
         case EXPR_INVALID:
-            *err = string_new_fmt(arena, invalid_expr_msg);
+            *err = string_new_fmt(arena, invalid_expr_msg, expr.expr.err.s);
             return false;
     }
     if (!left_valid || !right_valid) {

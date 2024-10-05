@@ -16,7 +16,8 @@ String string_empty(Arena *arena) {
     return (String) { .s = "", .len = 0, .arena = arena };
 }
 
-String string_new(char *s, size_t len, Arena *arena) {
+String string_new(char *s, Arena *arena) {
+    size_t len = strnlen(s, 512) + 1;
     char *s_new = arena_alloc(arena, len);
     memcpy(s_new, s, len);
     return (String) { .s = s_new, .len = len, .arena = arena };

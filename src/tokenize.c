@@ -6,6 +6,7 @@
 #include "arena.c"
 #include "unit.c"
 #include "debug.c"
+#include "string.c"
 
 typedef enum TokenType TokenType;
 enum TokenType {
@@ -235,57 +236,43 @@ TokenString tokenize(const char *input, Arena *arena) {
     return tokens;
 }
 
-void token_display(Token token) {
+String token_string(Token token, Arena *arena) {
     switch (token.type) {
         case TOK_END:
-            debug("End of input\n");
-            break;
+            return string_new("end", arena);
         case TOK_INVALID:
-            debug("Invalid token\n");
-            break;
+            return string_new("invalid", arena);
         case TOK_QUIT:
-            debug("Quit token\n");
-            break;
+            return string_new("quit/exit", arena);
         case TOK_HELP:
-            debug("Help token\n");
-            break;
+            return string_new("help", arena);
         case TOK_MEMORY:
-            debug("Memory token\n");
-            break;
+            return string_new("memory", arena);
         case TOK_NUM:
-            debug("Number: %f\n", token.number);
-            break;
+            return string_new_fmt(arena, "%f", token.number);
         case TOK_VAR:
-            debug("Variable: %s\n", token.var_name);
-            break;
+            return string_new((char *)token.var_name, arena);
         case TOK_EQUALS:
-            debug("Equals token\n");
-            break;
+            return string_new("=", arena);
         case TOK_ADD:
-            debug("Addition token\n");
-            break;
+            return string_new("+", arena);
         case TOK_SUB:
-            debug("Subtraction token\n");
-            break;
+            return string_new("-", arena);
         case TOK_MUL:
-            debug("Multiplication token\n");
-            break;
+            return string_new("*", arena);
         case TOK_DIV:
-            debug("Division token\n");
-            break;
+            return string_new("/", arena);
         case TOK_WHITESPACE:
-            debug("Whitespace token\n");
-            break;
+            return string_new("whitespace", arena);
         case TOK_UNIT:
-            debug("Unit token: %s\n", unit_strings[token.unit_type]);
-            break;
+            return string_new((char *)unit_strings[token.unit_type], arena);
         case TOK_CONVERT:
-            debug("Convert token\n");
-            break;
+            return string_new("->", arena);
         case TOK_CARET:
-            debug("Caret token\n");
-            break;
-        default:
-            debug("Unknown token\n");
+            return string_new("^", arena);
     }
+}
+
+void token_display(Token token, Arena *arena) {
+    debug("Token: %s\n", token_string(token, arena).s);
 }

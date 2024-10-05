@@ -95,7 +95,7 @@ void test_tokenize_case(void *c_opaque) {
     Arena arena = arena_create();
     TokenString tokens = tokenize(c.input, &arena);
     for (size_t i = 0; i < tokens.length; i++) {
-        token_display(tokens.tokens[i]);
+        token_display(tokens.tokens[i], &arena);
     }
     assert_eq(tokens.length, c.length);
     for (size_t i = 0; i < tokens.length; i++) {

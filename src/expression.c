@@ -4,6 +4,7 @@
 #include "arena.c"
 #include "tokenize.c"
 #include "unit.c"
+#include "string.c"
 
 typedef struct Expression Expression;
 typedef struct Constant Constant;
@@ -48,14 +49,13 @@ typedef union {
     Unit unit;
     UnaryExpr unary_expr;
     BinaryExpr binary_expr;
+    String err;
 } ExprData;
 
 struct Expression {
     ExprType type;
     ExprData expr;
 };
-
-const Expression invalid_expr = { .type = EXPR_INVALID };
 
 Expression expr_new_var(unsigned char *var_name, Arena *arena) {
     size_t name_len = strnlen((char *)var_name, MAX_INPUT) + 1;
@@ -102,6 +102,10 @@ Expression expr_new_unit_degree(UnitType unit_type, Expression degree_expr, Aren
 
 Expression expr_new_unit_comp(Expression unit_expr_1, Expression unit_expr_2, Arena *arena) {
     return expr_new_bin(EXPR_COMP_UNIT, unit_expr_1, unit_expr_2, arena);
+}
+
+Expression expr_new_invalid(String err) {
+    return (Expression) { .type = EXPR_INVALID, .expr = { .err = err }};
 }
 
 bool expr_is_bin(ExprType type) {
@@ -180,7 +184,7 @@ void display_expr(size_t offset, Expression expr, Arena *arena) {
         debug("neg\n");
         display_expr(offset + 1, *expr.expr.unary_expr.right, arena);
     } else if (expr.type == EXPR_INVALID) {
-        debug("invalid\n");
+        debug("invalid: %s\n", expr.expr.err.s);
     } else {
         assert(expr.expr.binary_expr.left != NULL);
         assert(expr.expr.binary_expr.right != NULL);
