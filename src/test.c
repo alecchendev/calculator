@@ -486,7 +486,7 @@ void test_evaluate(void *case_idx_opaque) {
         {"km ^ 2 h lb^-3", 0, false},
         {"1 m / s + 2 km / h", 1 + 2.0 * 1000 / 3600, false},
         // Conversions
-        {"1 km * 3 -> in", 118110.236100, false},
+        {"1 km * 3 -> in", 118110.236220, false},
         {"2 s + 3 h - 6 min -> min", (2.0 + 3 * 3600 - 6 * 60) / 60, false},
         {"2 s + 3 h^2 / 6 min -> min", (2 + 3.0 / (6.0 / 60) * 3600) / 60, false},
         {"6 min / 2 min * 3 s -> s", 6.0 / 2 * (3.0 / 60) * 60, false},
@@ -514,8 +514,8 @@ void test_evaluate(void *case_idx_opaque) {
 void test_unit_mirror(void *_) {
     for (UnitType unit_type1 = 0; unit_type1 < UNIT_COUNT; unit_type1++) {
         for (UnitType unit_type2 = unit_type1; unit_type2 < UNIT_COUNT; unit_type2++) {
-            double one_to_two = unit_conversion[unit_type1][unit_type2];
-            double two_to_one = unit_conversion[unit_type2][unit_type1];
+            double one_to_two = unit_conversion(unit_type1, unit_type2);
+            double two_to_one = unit_conversion(unit_type2, unit_type1);
             if (one_to_two == 0) {
                 assert(two_to_one == 0);
             } else {
@@ -558,7 +558,7 @@ void test_memory_case(void *c_opaque) {
             unit = check_unit(value, mem, &err, &line_arena);
             if (expr_is_number(value.type)) {
                 double result = evaluate(value, mem, &err, &line_arena);
-                debug("err: %s\n", err.msg);
+                debug("err: %s\n", err.s);
                 assert(err.len == 0);
                 value = expr_new_const_unit(result, expr_new_unit_full(unit, &mem_arena),
                     &mem_arena);

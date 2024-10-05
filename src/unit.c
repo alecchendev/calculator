@@ -88,25 +88,60 @@ UnitCategory unit_category(UnitType type) {
     }
 }
 
+double to_meters(UnitType from) {
+    switch (from) {
+        case UNIT_CENTIMETER: return 0.01;
+        case UNIT_METER: return 1;
+        case UNIT_KILOMETER: return 1000;
+        case UNIT_INCH: return 0.0254;
+        case UNIT_FOOT: return 0.3048;
+        case UNIT_MILE: return 1609.344;
+        default:
+            assert(false);
+            return 0;
+    }
+}
+
+double to_seconds(UnitType from) {
+    switch (from) {
+        case UNIT_SECOND: return 1;
+        case UNIT_MINUTE: return 60;
+        case UNIT_HOUR: return 3600;
+        default:
+            assert(false);
+            return 0;
+    }
+}
+
+double to_kilograms(UnitType from) {
+    switch (from) {
+        case UNIT_GRAM: return 0.001;
+        case UNIT_KILOGRAM: return 1;
+        case UNIT_OUNCE: return 0.0283495231;
+        case UNIT_POUND: return 0.45359237;
+        default:
+            assert(false);
+            return 0;
+    }
+}
+
 // TODO: think more about precision, maybe rewrite some things
 // as expressions so the compiler can work some magic
-double unit_conversion[UNIT_COUNT][UNIT_COUNT] = {
-    //     cm, m, km, in, ft, mi, s, min, h, g, kg, oz, lb, none
-    /*cm*/ {1, 0.01, 0.00001, 1/2.54, 1/(2.54*12), 1/(2.54*12*5280), 0, 0, 0, 0, 0, 0, 0, 1},
-    /*m */ {100, 1, 0.001, 39.3700787, 3.2808399, 3.2808399/5280, 0, 0, 0, 0, 0, 0, 0, 1},
-    /*km*/ {100000, 1000, 1, 39370.0787, 3280.8399, 0.62137119, 0, 0, 0, 0, 0, 0, 0, 1},
-    /*in*/ {2.54, 0.0254, 0.0000254, 1, 1.0/12, 1.0/(12*5280), 0, 0, 0, 0, 0, 0, 0, 1},
-    /*ft*/ {30.48, 0.3048, 0.0003048, 12, 1, 1.0/5280, 0, 0, 0, 0, 0, 0, 0, 1},
-    /*mi*/ {160934.4, 1609.344, 1.609344, 63360, 5280, 1, 0, 0, 0, 0, 0, 0, 0, 1},
-    /*s*/  {0, 0, 0, 0, 0, 0, 1, 1.0/60, 1.0/3600, 0, 0, 0, 0, 1},
-    /*min*/{0, 0, 0, 0, 0, 0, 60, 1, 1.0/60, 0, 0, 0, 0, 1},
-    /*h*/  {0, 0, 0, 0, 0, 0, 3600, 60, 1, 0, 0, 0, 0, 1},
-    /*g*/  {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0.001, 0.0352739619, 0.00220462262, 1},
-    /*kg*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 1000, 1, 35.2739619, 2.20462262, 1},
-    /*oz*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 28.3495231, 0.0283495231, 1, 1.0/16, 1},
-    /*lb*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 453.59237, 0.45359237, 16, 1, 1},
-    /*none*/{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-};
+double unit_conversion(UnitType from, UnitType to) {
+    UnitCategory cat_from = unit_category(from);
+    UnitCategory cat_to = unit_category(to);
+    if (cat_from != cat_to) return 0;
+    switch (cat_from) {
+        case UNIT_CATEGORY_DISTANCE:
+            return to_meters(from) / to_meters(to);
+        case UNIT_CATEGORY_MASS:
+            return to_kilograms(from) / to_kilograms(to);
+        case UNIT_CATEGORY_TIME:
+            return to_seconds(from) / to_seconds(to);
+        case UNIT_CATEGORY_NONE:
+            return 0;
+    }
+}
 
 typedef struct Unit Unit;
 struct Unit {
@@ -211,7 +246,7 @@ double unit_convert_factor(Unit a, Unit b, Arena *arena) {
         double factor = 1;
         for (size_t j = 0; j < b.length; j++) {
             if (unit_category(a.types[i]) == unit_category(b.types[j])) {
-                factor = pow(unit_conversion[a.types[i]][b.types[j]], a.degrees[i]);
+                factor = pow(unit_conversion(a.types[i], b.types[j]), a.degrees[i]);
                 debug("Found convertible: left: %s right: %s degree: %d -> factor: %lf\n", unit_strings[a.types[i]], unit_strings[b.types[j]], a.degrees[i], factor);
                 break;
             }
