@@ -80,22 +80,7 @@ Expression parse(TokenString tokens, Memory mem, Arena *arena) {
     }
     if (tokens.length == 0) {
         debug("empty\n");
-        return empty_expr;
-    }
-    if (tokens.length > 0 && tokens.tokens[tokens.length - 1].type == TOK_END) {
-        return parse((TokenString) { .tokens = tokens.tokens, .length = tokens.length - 1}, mem, arena);
-    }
-    if (tokens.length == 1 && tokens.tokens[0].type == TOK_QUIT) {
-        debug("quit\n");
-        return quit_expr;
-    }
-    if (tokens.length == 1 && tokens.tokens[0].type == TOK_HELP) {
-        debug("help\n");
-        return help_expr;
-    }
-    if (tokens.length == 1 && tokens.tokens[0].type == TOK_MEMORY) {
-        debug("memory\n");
-        return memory_expr;
+        return invalid_expr;
     }
     if (tokens.length == 1 && tokens.tokens[0].type == TOK_UNIT) {
         debug("unit\n");
@@ -110,7 +95,8 @@ Expression parse(TokenString tokens, Memory mem, Arena *arena) {
         return expr_new_var(tokens.tokens[0].var_name, arena);
     }
     if (tokens.length == 1) {
-        debug("Invalid expression token length 1\n");
+        debug("Invalid expression token length 1:\n");
+        token_display(tokens.tokens[0]);
         return invalid_expr;
     }
 

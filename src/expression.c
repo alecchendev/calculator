@@ -39,10 +39,6 @@ typedef enum {
     EXPR_POW,
     EXPR_VAR,
     EXPR_SET_VAR,
-    EXPR_EMPTY,
-    EXPR_QUIT,
-    EXPR_HELP,
-    EXPR_MEMORY,
     EXPR_INVALID,
 } ExprType;
 
@@ -59,10 +55,6 @@ struct Expression {
     ExprData expr;
 };
 
-const Expression empty_expr = { .type = EXPR_EMPTY };
-const Expression quit_expr = { .type = EXPR_QUIT };
-const Expression help_expr = { .type = EXPR_HELP };
-const Expression memory_expr = { .type = EXPR_MEMORY };
 const Expression invalid_expr = { .type = EXPR_INVALID };
 
 Expression expr_new_var(unsigned char *var_name, Arena *arena) {
@@ -115,8 +107,7 @@ Expression expr_new_unit_comp(Expression unit_expr_1, Expression unit_expr_2, Ar
 bool expr_is_bin(ExprType type) {
     switch (type) {
         case EXPR_CONSTANT: case EXPR_UNIT: case EXPR_NEG: case EXPR_VAR:
-        case EXPR_EMPTY: case EXPR_QUIT: case EXPR_HELP: case EXPR_INVALID:
-        case EXPR_MEMORY:
+        case EXPR_INVALID:
             return false;
         case EXPR_CONST_UNIT: case EXPR_COMP_UNIT: case EXPR_DIV_UNIT:
         case EXPR_ADD: case EXPR_SUB: case EXPR_MUL: case EXPR_DIV:
@@ -131,8 +122,8 @@ bool expr_is_unit(ExprType type) {
             return true;
         case EXPR_CONSTANT: case EXPR_NEG: case EXPR_CONST_UNIT: case EXPR_VAR:
         case EXPR_ADD: case EXPR_SUB: case EXPR_MUL:
-        case EXPR_DIV: case EXPR_CONVERT: case EXPR_SET_VAR: case EXPR_EMPTY:
-        case EXPR_QUIT: case EXPR_HELP: case EXPR_INVALID: case EXPR_MEMORY:
+        case EXPR_DIV: case EXPR_CONVERT: case EXPR_SET_VAR:
+        case EXPR_INVALID:
             return false;
     }
 }
@@ -144,8 +135,8 @@ bool expr_is_number(ExprType type) {
         case EXPR_DIV: case EXPR_CONVERT:
             return true;
         case EXPR_UNIT: case EXPR_COMP_UNIT: case EXPR_POW: case EXPR_SET_VAR:
-        case EXPR_VAR: case EXPR_DIV_UNIT: case EXPR_EMPTY: case EXPR_QUIT:
-        case EXPR_HELP: case EXPR_INVALID: case EXPR_MEMORY:
+        case EXPR_VAR: case EXPR_DIV_UNIT:
+        case EXPR_INVALID:
             return false;
     }
 }
@@ -168,10 +159,6 @@ const char *display_expr_op(ExprType type) {
         case EXPR_NEG: return "negation";
         case EXPR_CONSTANT: return "const";
         case EXPR_UNIT: return "unit";
-        case EXPR_EMPTY: return "empty";
-        case EXPR_QUIT: return "quit";
-        case EXPR_HELP: return "help";
-        case EXPR_MEMORY: return "memory";
         case EXPR_INVALID: return "invalid";
     }
 }
@@ -192,16 +179,8 @@ void display_expr(size_t offset, Expression expr, Arena *arena) {
     } else if (expr.type == EXPR_NEG) {
         debug("neg\n");
         display_expr(offset + 1, *expr.expr.unary_expr.right, arena);
-    } else if (expr.type == EXPR_EMPTY) {
-        debug("empty\n");
-    } else if (expr.type == EXPR_QUIT) {
-        debug("quit\n");
     } else if (expr.type == EXPR_INVALID) {
         debug("invalid\n");
-    } else if (expr.type == EXPR_HELP) {
-        debug("help\n");
-    } else if (expr.type == EXPR_MEMORY) {
-        debug("memory\n");
     } else {
         assert(expr.expr.binary_expr.left != NULL);
         assert(expr.expr.binary_expr.right != NULL);

@@ -204,7 +204,7 @@ bool exprs_equal(Expression a, Expression b, Arena *arena) {
             if (!exprs_equal(*a.expr.binary_expr.right, *b.expr.binary_expr.right, arena)) {
                 return false;
             }
-        case EXPR_EMPTY: case EXPR_QUIT: case EXPR_HELP: case EXPR_INVALID: case EXPR_MEMORY:
+        case EXPR_INVALID:
             return true;
     }
 }
@@ -358,8 +358,9 @@ void test_invalid_expr(void *case_idx_opaque) {
         {"asdf asdf asdf asdf"},
         // Variables variables
         {"km = 3"},
-        // {"quit = 3"},
+        {"quit = 3"},
         {"x + 1 = 2"},
+        {"help"}, // Parsing doesn't handle commands
     };
     const size_t num_cases = sizeof(cases) / sizeof(InvalidExprCase);
     bool all_passed = true;

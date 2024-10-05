@@ -1,8 +1,6 @@
 #pragma once
 
 #include <stdarg.h>
-#include <stdio.h>
-#include "parse.c"
 #include "memory.c"
 #include "unit.c"
 
@@ -66,8 +64,6 @@ bool check_valid_expr(Expression expr, String *err, Arena *arena) {
             left_valid = check_valid_expr(*expr.expr.binary_expr.left, err, arena);
             right_valid = check_valid_expr(*expr.expr.binary_expr.right, err, arena);
             break;
-        case EXPR_EMPTY: case EXPR_QUIT: case EXPR_HELP: case EXPR_MEMORY:
-            return true;
         case EXPR_INVALID:
             *err = string_new_fmt(arena, invalid_expr_msg);
             return false;
@@ -200,7 +196,7 @@ Unit check_unit(Expression expr, Memory mem, String *err, Arena *arena) {
     } else if (expr.type == EXPR_NEG) {
         debug("neg\n");
         return check_unit(*expr.expr.unary_expr.right, mem, err, arena);
-    } else if (expr.type == EXPR_EMPTY || expr.type == EXPR_QUIT || expr.type == EXPR_INVALID) {
+    } else if (expr.type == EXPR_INVALID) {
         debug("empty, quit, or invalid, no unit: %d\n", expr.type);
         return unit_new_unknown(arena);
     }
@@ -305,8 +301,7 @@ double evaluate(Expression expr, Memory mem, String *err, Arena *arena) {
             right_unit = check_unit(*expr.expr.binary_expr.right, mem, err, arena);
             left = evaluate(*expr.expr.binary_expr.left, mem, err, arena);
             return left * unit_convert_factor(left_unit, right_unit, arena);
-        case EXPR_EMPTY: case EXPR_QUIT: case EXPR_HELP: case EXPR_INVALID:
-        case EXPR_MEMORY:
+        case EXPR_INVALID:
             assert(false);
             return 0;
     }

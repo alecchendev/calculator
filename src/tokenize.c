@@ -221,7 +221,7 @@ TokenString tokenize(const char *input, Arena *arena) {
     }
     while (!done) {
         Token token = next_token(input, &pos, input_length, arena);
-        if (token.type == TOK_INVALID || token.type == TOK_END || token.type == TOK_QUIT) {
+        if (token.type == TOK_INVALID || token.type == TOK_END) {
             done = true;
         } else if (token.type == TOK_WHITESPACE) {
             continue;
