@@ -20,7 +20,7 @@ Convert units: 10 m/s^2 -> km/h^2\n\
 Auto-convert units: 10 km - 2 m + 12 mi\n\
 Variables: x = 9 + 10\n\
 Unit aliases: n = kg m s^-2\n\
-+See docs for more info.";
+See docs for more info.";
 
 bool execute_line(const char *input, char *output, size_t output_len, Memory *mem, Arena *repl_arena) {
     Arena arena = arena_create();
@@ -36,6 +36,9 @@ bool execute_line(const char *input, char *output, size_t output_len, Memory *me
         memset(output, 0, output_len);
     } else if (expr.type == EXPR_HELP) {
         memcpy(output, help_msg, sizeof(help_msg));
+    } else if (expr.type == EXPR_MEMORY) {
+        String memory_str = memory_show(*mem, &arena);
+        memcpy(output, memory_str.s, memory_str.len);
     } else if (expr.type == EXPR_QUIT) {
         memset(output, 0, output_len);
         quit = true;
@@ -54,13 +57,13 @@ bool execute_line(const char *input, char *output, size_t output_len, Memory *me
                 } else {
                     value = expr_new_const_unit(result, expr_new_unit_full(unit, repl_arena),
                         repl_arena);
-                    snprintf(output, output_len, "%s = %g %s", var_name, result, display_unit(unit, &arena));
                 }
             } else {
                 value = expr_new_unit_full(unit, repl_arena);
-                snprintf(output, output_len, "%s = %s", var_name, display_unit(unit, &arena));
             }
             if (err.len == 0) {
+                String msg = display_var(var_name, value, false, &arena);
+                memcpy(output, msg.s, msg.len);
                 memory_add_var(mem, var_name, value, repl_arena);
             }
         }

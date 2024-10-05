@@ -105,7 +105,7 @@ bool check_valid_expr(Expression expr, ErrorString *err, Arena *arena) {
             left_valid = check_valid_expr(*expr.expr.binary_expr.left, err, arena);
             right_valid = check_valid_expr(*expr.expr.binary_expr.right, err, arena);
             break;
-        case EXPR_EMPTY: case EXPR_QUIT: case EXPR_HELP:
+        case EXPR_EMPTY: case EXPR_QUIT: case EXPR_HELP: case EXPR_MEMORY:
             return true;
         case EXPR_INVALID:
             *err = err_new(arena, invalid_expr_msg);
@@ -345,6 +345,7 @@ double evaluate(Expression expr, Memory mem, ErrorString *err, Arena *arena) {
             left = evaluate(*expr.expr.binary_expr.left, mem, err, arena);
             return left * unit_convert_factor(left_unit, right_unit, arena);
         case EXPR_EMPTY: case EXPR_QUIT: case EXPR_HELP: case EXPR_INVALID:
+        case EXPR_MEMORY:
             assert(false);
             return 0;
     }

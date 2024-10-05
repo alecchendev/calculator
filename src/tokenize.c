@@ -20,6 +20,7 @@ enum TokenType {
     TOK_DIV,
     TOK_CARET,
     TOK_WHITESPACE,
+    TOK_MEMORY,
     TOK_HELP,
     TOK_QUIT,
     TOK_END,
@@ -64,6 +65,7 @@ const Token end_token = {TOK_END};
 const Token quit_token = {TOK_QUIT};
 const Token whitespace_token = {TOK_WHITESPACE};
 const Token help_token = {TOK_HELP};
+const Token memory_token = {TOK_MEMORY};
 const Token add_token = {TOK_ADD};
 const Token sub_token = {TOK_SUB};
 const Token mul_token = {TOK_MUL};
@@ -113,6 +115,9 @@ Token next_token(const char *input, size_t *pos, size_t length, Arena *arena) {
         }
         if (strnlen(string_token, 5) == 4 && strncmp(string_token, "help", 4) == 0) {
             return help_token;
+        }
+        if (strnlen(string_token, 7) == 6 && strncmp(string_token, "memory", 6) == 0) {
+            return memory_token;
         }
         for (size_t unit = 0; unit < UNIT_COUNT; unit++) {
             const char *unit_str = unit_strings[unit];
@@ -240,6 +245,9 @@ void token_display(Token token) {
             break;
         case TOK_HELP:
             debug("Help token\n");
+            break;
+        case TOK_MEMORY:
+            debug("Memory token\n");
             break;
         case TOK_NUM:
             debug("Number: %f\n", token.number);

@@ -203,7 +203,7 @@ bool exprs_equal(Expression a, Expression b, Arena *arena) {
             if (!exprs_equal(*a.expr.binary_expr.right, *b.expr.binary_expr.right, arena)) {
                 return false;
             }
-        case EXPR_EMPTY: case EXPR_QUIT: case EXPR_HELP: case EXPR_INVALID:
+        case EXPR_EMPTY: case EXPR_QUIT: case EXPR_HELP: case EXPR_INVALID: case EXPR_MEMORY:
             return true;
     }
 }
@@ -621,6 +621,29 @@ void test_memory(void *case_idx_opaque) {
     arena_free(&arena);
 }
 
+void test_memory_show(void *case_idx_opaque) {
+    Arena arena = arena_create();
+    Memory mem = memory_new(&arena);
+    unsigned char *var1 = (unsigned char *)"x";
+    Expression val1 = expr_new_const_unit(3, expr_new_unit_full(unit_new_none(&arena), &arena), &arena);
+    memory_add_var(&mem, var1, val1, &arena);
+
+    unsigned char *var2 = (unsigned char *)"y";
+    Expression val2 = expr_new_unit(UNIT_KILOGRAM, &arena);
+    memory_add_var(&mem, var2, val2, &arena);
+
+    unsigned char *var3 = (unsigned char *)"z";
+    Expression val3 = expr_new_const_unit(8, expr_new_unit(UNIT_KILOMETER, &arena), &arena);
+    memory_add_var(&mem, var3, val3, &arena);
+
+    String mem_str = memory_show(mem, &arena);
+#ifdef DEBUG
+    assert(strncmp(mem_str.s, "x = 3none\ny = kg\nz = 8 km", 25) == 0);
+#else
+    assert(strncmp(mem_str.s, "x = 3\ny = kg\nz = 8 km", 21) == 0);
+#endif
+}
+
 typedef struct {
     const Unit unit;
     const char *expected;
@@ -798,6 +821,7 @@ int main(int argc, char **argv) {
         test_check_unit,
         test_evaluate,
         test_memory,
+        test_memory_show,
         test_unit_mirror,
         test_display_unit,
         test_is_pow_two,

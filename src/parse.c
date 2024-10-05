@@ -15,6 +15,7 @@ bool is_bin_op(TokenType type) {
             return true;
         case TOK_END: case TOK_INVALID: case TOK_QUIT: case TOK_HELP:
         case TOK_NUM: case TOK_VAR: case TOK_WHITESPACE: case TOK_UNIT:
+        case TOK_MEMORY:
             return false;
     }
 }
@@ -91,6 +92,10 @@ Expression parse(TokenString tokens, Memory mem, Arena *arena) {
     if (tokens.length == 1 && tokens.tokens[0].type == TOK_HELP) {
         debug("help\n");
         return help_expr;
+    }
+    if (tokens.length == 1 && tokens.tokens[0].type == TOK_MEMORY) {
+        debug("memory\n");
+        return memory_expr;
     }
     if (tokens.length == 1 && tokens.tokens[0].type == TOK_UNIT) {
         debug("unit\n");
