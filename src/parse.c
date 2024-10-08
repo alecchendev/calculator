@@ -15,7 +15,7 @@ bool is_bin_op(TokenType type) {
             return true;
         case TOK_END: case TOK_INVALID: case TOK_QUIT: case TOK_HELP:
         case TOK_NUM: case TOK_VAR: case TOK_WHITESPACE: case TOK_UNIT:
-        case TOK_MEMORY: case TOK_SHOW_UNITS:
+        case TOK_MEMORY: case TOK_SHOW_UNITS: case TOK_EXAMPLES:
             return false;
     }
 }

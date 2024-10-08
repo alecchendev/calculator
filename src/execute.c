@@ -47,6 +47,10 @@ bool execute_line_inner(const char *input, char *output, size_t output_len, Memo
         memcpy(output, units_str.s, units_str.len);
         return false;
     }
+    if (tokens.length == 1 && tokens.tokens[0].type == TOK_EXAMPLES) {
+        memcpy(output, help_msg, sizeof(help_msg));
+        return false;
+    }
 
     Expression expr = parse(tokens, *mem, arena);
     substitute_variables(&expr, *mem);
