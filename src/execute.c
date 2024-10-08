@@ -11,10 +11,17 @@
 #include "parse.c"
 #include "tokenize.c"
 
-// TODO: more math, everything relating to a stored memory
-const char help_msg[] = "Hello! Here's some stuff you can do:\n\
-Math: 1 + 2 * 3 - 4 / 5\n\
-More math: TODO pow, log, parentheses\n\
+const char help_msg[] = "Hello! This is a simple program \
+for evaluating expressions with units. Type any of the following \
+and press enter:\n\n\
+<expression> -> Evaluates the expression\n\
+help -> Shows this message\n\
+examples -> Shows example expressions\n\
+units -> Shows builtin units\n\
+memory -> Shows variables in memory";
+
+// TODO: more math
+const char examples_msg[] = "Math: 1 + 2 * 3 - 4 / 5\n\
 Math with units: 1km/2s*3km+4km^2s^-1\n\
 Convert units: 10 m/s^2 -> km/h^2\n\
 Auto-convert units: 10 km - 2 m + 12 mi\n\
@@ -37,9 +44,8 @@ bool execute_line_inner(const char *input, char *output, size_t output_len, Memo
         memcpy(output, help_msg, sizeof(help_msg));
         return false;
     }
-    if (tokens.length == 1 && tokens.tokens[0].type == TOK_MEMORY) {
-        String memory_str = memory_show(*mem, arena);
-        memcpy(output, memory_str.s, memory_str.len);
+    if (tokens.length == 1 && tokens.tokens[0].type == TOK_EXAMPLES) {
+        memcpy(output, examples_msg, sizeof(examples_msg));
         return false;
     }
     if (tokens.length == 1 && tokens.tokens[0].type == TOK_SHOW_UNITS) {
@@ -47,8 +53,9 @@ bool execute_line_inner(const char *input, char *output, size_t output_len, Memo
         memcpy(output, units_str.s, units_str.len);
         return false;
     }
-    if (tokens.length == 1 && tokens.tokens[0].type == TOK_EXAMPLES) {
-        memcpy(output, help_msg, sizeof(help_msg));
+    if (tokens.length == 1 && tokens.tokens[0].type == TOK_MEMORY) {
+        String memory_str = memory_show(*mem, arena);
+        memcpy(output, memory_str.s, memory_str.len);
         return false;
     }
 
