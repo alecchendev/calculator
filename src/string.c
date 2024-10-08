@@ -60,3 +60,8 @@ String string_concat(String s1, String s2, Arena *arena) {
     memcpy(&s_new[s1_len], s2.s, s2_len);
     return (String) { .s = s_new, .len = len_new, .arena = arena };
 }
+
+// Simple wrapper for brevity, still does a heap allocation for s2.
+String string_concat_static(String s1, char *s2, Arena *arena) {
+    return string_concat(s1, string_new(s2, arena), arena);
+}

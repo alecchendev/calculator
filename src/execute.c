@@ -42,6 +42,11 @@ bool execute_line_inner(const char *input, char *output, size_t output_len, Memo
         memcpy(output, memory_str.s, memory_str.len);
         return false;
     }
+    if (tokens.length == 1 && tokens.tokens[0].type == TOK_SHOW_UNITS) {
+        String units_str = show_all_units(arena);
+        memcpy(output, units_str.s, units_str.len);
+        return false;
+    }
 
     Expression expr = parse(tokens, *mem, arena);
     substitute_variables(&expr, *mem);

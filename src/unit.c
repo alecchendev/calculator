@@ -6,6 +6,7 @@
 #include <string.h>
 #include "arena.c"
 #include "debug.c"
+#include "string.c"
 
 typedef enum UnitType UnitType;
 enum UnitType {
@@ -26,8 +27,8 @@ enum UnitType {
     UNIT_POUND,
     UNIT_OUNCE,
 
-    UNIT_NONE,
     UNIT_COUNT,
+    UNIT_NONE,
     UNIT_UNKNOWN,
 };
 
@@ -50,8 +51,8 @@ const char *unit_strings[] = {
     "kg",
     "lb",
     "oz",
-    "none",
     "",
+    "none",
     "unknown",
 };
 
@@ -104,6 +105,13 @@ enum UnitCategory {
     UNIT_CATEGORY_NONE,
 };
 
+const char *unit_category_strings[] = {
+    "Distance",
+    "Time",
+    "Mass",
+    "none",
+};
+
 UnitCategory unit_category(UnitType type) {
     switch (type) {
         case UNIT_CENTIMETER:
@@ -127,6 +135,31 @@ UnitCategory unit_category(UnitType type) {
         case UNIT_UNKNOWN:
             return UNIT_CATEGORY_NONE;
     }
+}
+
+String show_all_units(Arena *arena) {
+    String s = string_empty(arena);
+    for (UnitCategory cat = 0; cat < UNIT_CATEGORY_NONE; cat++) {
+        char *cat_str = (char *)unit_category_strings[cat];
+        s = string_concat_static(s, cat_str, arena);
+        s = string_concat_static(s, ": ", arena);
+        bool first = true;
+        for (UnitType typ = 0; typ < UNIT_COUNT; typ++) {
+            if (unit_category(typ) == cat) {
+                if (first) {
+                    first = false;
+                } else {
+                    s = string_concat_static(s, ", ", arena);
+                }
+                char *unit_str = (char *)unit_strings[typ];
+                s = string_concat_static(s, unit_str, arena);
+            }
+        }
+        if (cat < UNIT_CATEGORY_NONE - 1) {
+            s = string_concat_static(s, "\n", arena);
+        }
+    }
+    return s;
 }
 
 double to_meters(UnitType from) {

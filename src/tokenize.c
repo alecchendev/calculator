@@ -21,6 +21,7 @@ enum TokenType {
     TOK_DIV,
     TOK_CARET,
     TOK_WHITESPACE,
+    TOK_SHOW_UNITS,
     TOK_MEMORY,
     TOK_HELP,
     TOK_QUIT,
@@ -67,6 +68,7 @@ const Token quit_token = {TOK_QUIT};
 const Token whitespace_token = {TOK_WHITESPACE};
 const Token help_token = {TOK_HELP};
 const Token memory_token = {TOK_MEMORY};
+const Token show_units_token = {TOK_SHOW_UNITS};
 const Token add_token = {TOK_ADD};
 const Token sub_token = {TOK_SUB};
 const Token mul_token = {TOK_MUL};
@@ -119,6 +121,9 @@ Token next_token(const char *input, size_t *pos, size_t length, Arena *arena) {
         }
         if (strnlen(string_token, 7) == 6 && strncmp(string_token, "memory", 6) == 0) {
             return memory_token;
+        }
+        if (strnlen(string_token, 6) == 5 && strncmp(string_token, "units", 5) == 0) {
+            return show_units_token;
         }
         UnitType unit = string_to_unit(string_token);
         if (unit != UNIT_UNKNOWN) {
@@ -244,6 +249,8 @@ String token_string(Token token, Arena *arena) {
             return string_new("help", arena);
         case TOK_MEMORY:
             return string_new("memory", arena);
+        case TOK_SHOW_UNITS:
+            return string_new("units", arena);
         case TOK_NUM:
             return string_new_fmt(arena, "%f", token.number);
         case TOK_VAR:
