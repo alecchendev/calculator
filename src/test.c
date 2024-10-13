@@ -156,6 +156,8 @@ void test_tokenize(void *case_idx_opaque) {
         {"lb lbs pound pounds", 4, {token_new_unit(UNIT_POUND),
             token_new_unit(UNIT_POUND), token_new_unit(UNIT_POUND),
             token_new_unit(UNIT_POUND)}},
+        {"k K kelvin", 3, {token_new_unit(UNIT_KELVIN), token_new_unit(UNIT_KELVIN),
+            token_new_unit(UNIT_KELVIN)}},
         // TODO: more comprehensive
     };
     const size_t num_cases = sizeof(cases) / sizeof(TokenCase);
@@ -505,6 +507,9 @@ void test_evaluate(void *case_idx_opaque) {
         // Divide by zero
         {"1 / 0", 0, true},
         {"2 km / 0 mi", 0, true},
+        // Temperatures
+        {"50 f -> c", (50 - 32) / 1.8, false},
+        {"50 f^2 -> c^2", 191.80606791, false},
         // TODO: overflow tests
     };
     const size_t num_cases = sizeof(cases) / sizeof(EvaluateCase);
@@ -521,10 +526,14 @@ void test_evaluate(void *case_idx_opaque) {
 void test_unit_mirror(void *_) {
     for (UnitType unit_type1 = 0; unit_type1 < UNIT_COUNT; unit_type1++) {
         for (UnitType unit_type2 = unit_type1; unit_type2 < UNIT_COUNT; unit_type2++) {
-            double one_to_two = unit_conversion(unit_type1, unit_type2);
-            double two_to_one = unit_conversion(unit_type2, unit_type1);
+            double one_to_two = unit_conversion(1, unit_type1, unit_type2);
+            double two_to_one = unit_conversion(1, unit_type2, unit_type1);
             if (one_to_two == 0) {
                 assert(two_to_one == 0);
+            } else if (unit_category(unit_type1) == UNIT_CATEGORY_TEMPERATURE){
+                double two_to_one_to_two = unit_conversion(two_to_one, unit_type1, unit_type2);
+                debug("1: %s 2: %s two_to_one_to_two: %lf\n", unit_strings[unit_type1], unit_strings[unit_type2], one_to_two, two_to_one_to_two);
+                assert(eq_diff(two_to_one_to_two, 1));
             } else {
                 debug("1: %s 2: %s 1 / one_to_two: %lf two_to_one: %lf\n", unit_strings[unit_type1], unit_strings[unit_type2], 1 / one_to_two, two_to_one);
                 assert(eq_diff(1 / one_to_two, two_to_one));

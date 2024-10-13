@@ -26,6 +26,10 @@ enum UnitType {
     UNIT_KILOGRAM,
     UNIT_POUND,
     UNIT_OUNCE,
+    // Temperature
+    UNIT_KELVIN,
+    UNIT_CELSIUS,
+    UNIT_FAHRENHEIT,
 
     UNIT_COUNT,
     UNIT_NONE,
@@ -51,6 +55,11 @@ const char *unit_strings[] = {
     "kg",
     "lb",
     "oz",
+    // Temperature
+    "K",
+    "C",
+    "F",
+
     "",
     "none",
     "unknown",
@@ -81,6 +90,9 @@ UnitType string_to_unit(char *s) {
     char *kgs[] = {"kg", "kilogram", "kilograms"};
     char *lbs[] = {"lb", "lbs", "pound", "pounds"};
     char *ozs[] = {"oz", "ozs", "ounce", "ounces"};
+    char *ks[] = {"K", "k", "kelvin"};
+    char *cs[] = {"C", "c", "celsius"};
+    char *fs[] = {"F", "f", "fahrenheit"};
     if (string_in_set(s, cms, 3)) return UNIT_CENTIMETER;
     if (string_in_set(s, ms, 3)) return UNIT_METER;
     if (string_in_set(s, kms, 3)) return UNIT_KILOMETER;
@@ -94,6 +106,9 @@ UnitType string_to_unit(char *s) {
     if (string_in_set(s, kgs, 3)) return UNIT_KILOGRAM;
     if (string_in_set(s, lbs, 4)) return UNIT_POUND;
     if (string_in_set(s, ozs, 4)) return UNIT_OUNCE;
+    if (string_in_set(s, ks, 3)) return UNIT_KELVIN;
+    if (string_in_set(s, cs, 3)) return UNIT_CELSIUS;
+    if (string_in_set(s, fs, 3)) return UNIT_FAHRENHEIT;
     return UNIT_UNKNOWN;
 }
 
@@ -102,6 +117,7 @@ enum UnitCategory {
     UNIT_CATEGORY_DISTANCE,
     UNIT_CATEGORY_TIME,
     UNIT_CATEGORY_MASS,
+    UNIT_CATEGORY_TEMPERATURE,
     UNIT_CATEGORY_NONE,
 };
 
@@ -109,6 +125,7 @@ const char *unit_category_strings[] = {
     "Distance",
     "Time",
     "Mass",
+    "Temperature",
     "none",
 };
 
@@ -130,6 +147,10 @@ UnitCategory unit_category(UnitType type) {
         case UNIT_POUND:
         case UNIT_OUNCE:
             return UNIT_CATEGORY_MASS;
+        case UNIT_KELVIN:
+        case UNIT_CELSIUS:
+        case UNIT_FAHRENHEIT:
+            return UNIT_CATEGORY_TEMPERATURE;
         case UNIT_NONE:
         case UNIT_COUNT:
         case UNIT_UNKNOWN:
@@ -162,58 +183,97 @@ String show_all_units(Arena *arena) {
     return s;
 }
 
-double to_meters(UnitType from) {
+// y = mx + b
+// x = (y - b) / m
+typedef struct SlopeIntercept SlopeIntercept;
+struct SlopeIntercept {
+    double m;
+    double b;
+};
+
+SlopeIntercept mb_new(double m, double b) {
+    return (SlopeIntercept) { .m = m, .b = b };
+}
+
+double solve_y(SlopeIntercept mb, double x) {
+    return mb.m * x + mb.b;
+}
+
+double solve_x(SlopeIntercept mb, double y) {
+    return (y - mb.b) / mb.m;
+}
+
+SlopeIntercept to_meters2(UnitType from) {
     switch (from) {
-        case UNIT_CENTIMETER: return 0.01;
-        case UNIT_METER: return 1;
-        case UNIT_KILOMETER: return 1000;
-        case UNIT_INCH: return 0.0254;
-        case UNIT_FOOT: return 0.3048;
-        case UNIT_MILE: return 1609.344;
+        case UNIT_CENTIMETER: return mb_new(0.01, 0);
+        case UNIT_METER: return mb_new(1, 0);
+        case UNIT_KILOMETER: return mb_new(1000, 0);
+        case UNIT_INCH: return mb_new(0.0254, 0);
+        case UNIT_FOOT: return mb_new(0.3048, 0);
+        case UNIT_MILE: return mb_new(1609.344, 0);
         default:
             assert(false);
-            return 0;
+            return mb_new(0, 0);
     }
 }
 
-double to_seconds(UnitType from) {
+SlopeIntercept to_seconds2(UnitType from) {
     switch (from) {
-        case UNIT_SECOND: return 1;
-        case UNIT_MINUTE: return 60;
-        case UNIT_HOUR: return 3600;
+        case UNIT_SECOND: return mb_new(1, 0);
+        case UNIT_MINUTE: return mb_new(60, 0);
+        case UNIT_HOUR: return mb_new(3600, 0);
         default:
             assert(false);
-            return 0;
+            return mb_new(0, 0);
     }
 }
 
-double to_kilograms(UnitType from) {
+SlopeIntercept to_kilograms2(UnitType from) {
     switch (from) {
-        case UNIT_GRAM: return 0.001;
-        case UNIT_KILOGRAM: return 1;
-        case UNIT_OUNCE: return 0.0283495231;
-        case UNIT_POUND: return 0.45359237;
+        case UNIT_GRAM: return mb_new(0.001, 0);
+        case UNIT_KILOGRAM: return mb_new(1, 0);
+        case UNIT_OUNCE: return mb_new(0.0283495231, 0);
+        case UNIT_POUND: return mb_new(0.45359237, 0);
         default:
             assert(false);
-            return 0;
+            return mb_new(0, 0);
+    }
+}
+
+SlopeIntercept to_kelvin(UnitType from) {
+    switch (from) {
+        case UNIT_KELVIN: return mb_new(1, 0);
+        case UNIT_CELSIUS: return mb_new(1, 273.15);
+        case UNIT_FAHRENHEIT:
+            return mb_new(5.0 / 9.0, 459.67 * 5.0 / 9.0);
+        default:
+            assert(false);
+            return mb_new(0, 0);
     }
 }
 
 // TODO: think more about precision, maybe rewrite some things
 // as expressions so the compiler can work some magic
-double unit_conversion(UnitType from, UnitType to) {
+double unit_conversion2(double value, UnitType from, UnitType to) {
     UnitCategory cat_from = unit_category(from);
     UnitCategory cat_to = unit_category(to);
     if (cat_from != cat_to) return 0;
+    double meters, kilograms, seconds, kelvin;
     switch (cat_from) {
         case UNIT_CATEGORY_DISTANCE:
-            return to_meters(from) / to_meters(to);
+            meters = solve_y(to_meters2(from), value);
+            return solve_x(to_meters2(to), meters);
         case UNIT_CATEGORY_MASS:
-            return to_kilograms(from) / to_kilograms(to);
+            kilograms = solve_y(to_kilograms2(from), value);
+            return solve_x(to_kilograms2(to), kilograms);
         case UNIT_CATEGORY_TIME:
-            return to_seconds(from) / to_seconds(to);
+            seconds = solve_y(to_seconds2(from), value);
+            return solve_x(to_seconds2(to), seconds);
+        case UNIT_CATEGORY_TEMPERATURE:
+            kelvin = solve_y(to_kelvin(from), value);
+            return solve_x(to_kelvin(to), kelvin);
         case UNIT_CATEGORY_NONE:
-            return 0;
+            return value;
     }
 }
 
@@ -245,7 +305,7 @@ Unit unit_new_single(UnitType type, int degree, Arena *arena) {
 }
 
 Unit unit_new_none(Arena *arena) {
-    return unit_new_single(UNIT_NONE, 0, arena);
+    return unit_new_single(UNIT_NONE, 1, arena);
 }
 
 Unit unit_new_unknown(Arena *arena) {
@@ -318,8 +378,12 @@ double unit_convert(double value, Unit a, Unit b, Arena *arena) {
     for (size_t i = 0; i < a.length; i++) {
         for (size_t j = 0; j < b.length; j++) {
             if (unit_category(a.types[i]) == unit_category(b.types[j])) {
-                value *= pow(unit_conversion(a.types[i], b.types[j]), a.degrees[i]);
-                debug("Found convertible: left: %s right: %s degree: %d -> factor: %lf\n", unit_strings[a.types[i]], unit_strings[b.types[j]], a.degrees[i], factor);
+                double new_value = value;
+                double value_degree_1 = pow(value, 1.0 / a.degrees[i]);
+                double converted_degree_1 = unit_conversion2(value_degree_1, a.types[i], b.types[j]);
+                new_value = pow(converted_degree_1, a.degrees[i]);
+                debug("Found convertible: left: %s right: %s degree: %d pre-value: %lf post-value: %lf\n", unit_strings[a.types[i]], unit_strings[b.types[j]], a.degrees[i], value, new_value);
+                value = new_value;
                 break;
             }
         }
