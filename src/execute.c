@@ -32,8 +32,8 @@ See docs for more info.";
 bool execute_line_inner(const char *input, char *output, size_t output_len, Memory *mem, Arena *repl_arena, Arena *arena) {
     TokenString tokens = tokenize(input, arena);
 
+    memset(output, 0, output_len);
     if (tokens.length == 0) {
-        memset(output, 0, output_len);
         return false;
     }
     if (tokens.length == 1 && tokens.tokens[0].type == TOK_QUIT) {
@@ -56,6 +56,9 @@ bool execute_line_inner(const char *input, char *output, size_t output_len, Memo
     if (tokens.length == 1 && tokens.tokens[0].type == TOK_MEMORY) {
         String memory_str = memory_show(*mem, arena);
         memcpy(output, memory_str.s, memory_str.len);
+        if (memory_str.len == 0) {
+            memcpy(output, "No variables in memory", 22);
+        }
         return false;
     }
 
