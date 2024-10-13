@@ -14,7 +14,7 @@
 const char help_msg[] = "Hello! This is a simple program \
 for evaluating expressions with units. Type any of the following \
 and press enter:\n\n\
-<expression> -> Evaluates the expression\n\
+[expression] -> Evaluates the expression\n\
 help -> Shows this message\n\
 examples -> Shows example expressions\n\
 units -> Shows builtin units\n\
