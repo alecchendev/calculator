@@ -311,23 +311,20 @@ bool units_equal(Unit a, Unit b, Arena *arena) {
     return all_found;
 }
 
-double unit_convert_factor(Unit a, Unit b, Arena *arena) {
+double unit_convert(double value, Unit a, Unit b, Arena *arena) {
     // Should only be called if we are able to convert
     debug("a: %s b: %s a.length: %zu b.length: %zu\n",
           display_unit(a, arena), display_unit(b, arena), a.length, b.length);
-    double all_factor = 1;
     for (size_t i = 0; i < a.length; i++) {
-        double factor = 1;
         for (size_t j = 0; j < b.length; j++) {
             if (unit_category(a.types[i]) == unit_category(b.types[j])) {
-                factor = pow(unit_conversion(a.types[i], b.types[j]), a.degrees[i]);
+                value *= pow(unit_conversion(a.types[i], b.types[j]), a.degrees[i]);
                 debug("Found convertible: left: %s right: %s degree: %d -> factor: %lf\n", unit_strings[a.types[i]], unit_strings[b.types[j]], a.degrees[i], factor);
                 break;
             }
         }
-        all_factor *= factor;
     }
-    return all_factor;
+    return value;
 }
 
 Unit unit_combine(Unit a, Unit b, bool reject_same_category, Arena *arena) {

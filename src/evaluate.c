@@ -300,12 +300,12 @@ double evaluate(Expression expr, Memory mem, String *err, Arena *arena) {
             left_unit = check_unit(*expr.expr.binary_expr.left, mem, err, arena);
             right_unit = check_unit(*expr.expr.binary_expr.right, mem, err, arena);
             left = evaluate(*expr.expr.binary_expr.left, mem, err, arena);
-            return left * unit_convert_factor(left_unit, right_unit, arena);
+            return unit_convert(left, left_unit, right_unit, arena);
         case EXPR_INVALID:
             assert(false);
             return 0;
     }
-    right *= unit_convert_factor(right_unit, left_unit, arena);
+    right = unit_convert(right, right_unit, left_unit, arena);
     switch (expr.type) {
         case EXPR_ADD:
             return left + right;
