@@ -254,7 +254,7 @@ SlopeIntercept to_kelvin(UnitType from) {
 
 // TODO: think more about precision, maybe rewrite some things
 // as expressions so the compiler can work some magic
-double unit_conversion2(double value, UnitType from, UnitType to) {
+double unit_conversion(double value, UnitType from, UnitType to) {
     UnitCategory cat_from = unit_category(from);
     UnitCategory cat_to = unit_category(to);
     if (cat_from != cat_to) return 0;
@@ -380,7 +380,7 @@ double unit_convert(double value, Unit a, Unit b, Arena *arena) {
             if (unit_category(a.types[i]) == unit_category(b.types[j])) {
                 double new_value = value;
                 double value_degree_1 = pow(value, 1.0 / a.degrees[i]);
-                double converted_degree_1 = unit_conversion2(value_degree_1, a.types[i], b.types[j]);
+                double converted_degree_1 = unit_conversion(value_degree_1, a.types[i], b.types[j]);
                 new_value = pow(converted_degree_1, a.degrees[i]);
                 debug("Found convertible: left: %s right: %s degree: %d pre-value: %lf post-value: %lf\n", unit_strings[a.types[i]], unit_strings[b.types[j]], a.degrees[i], value, new_value);
                 value = new_value;
