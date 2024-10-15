@@ -136,7 +136,7 @@ void test_tokenize(void *case_idx_opaque) {
             token_new_num(1), token_new_unit(UNIT_MILE), div_token,
             token_new_unit(UNIT_HOUR)
         }},
-        {"->", 1, {convert_token}},
+        {"-> to", 2, {convert_token, convert_token}},
         {"4.5 - 3 km -> mi", 6, {token_new_num(4.5), sub_token, token_new_num(3),
             token_new_unit(UNIT_KILOMETER), convert_token, token_new_unit(UNIT_MILE),
             end_token}},
