@@ -48,7 +48,7 @@ Degrees are casted to integers: km ^ 4.567 (= km^4)
 You can convert a number of one unit to another unit, as long as they
 make sense to convert.
 
-Convert: 1 km/s^2 -> mi/h^2
+Convert: 1 km/s^2 -> mi/h^2 ("to" instead of "->" works as well)
 
 ### Arithmetic on numbers with units
 
@@ -105,3 +105,5 @@ Distance: cm, m, km, in, ft, mi
 Time: s, min, h
 
 Mass: g, kg, lb, oz
+
+Temperature: K, C, F

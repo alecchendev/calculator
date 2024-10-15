@@ -130,6 +130,9 @@ Token next_token(const char *input, size_t *pos, size_t length, Arena *arena) {
         if (strnlen(string_token, 9) == 8 && strncmp(string_token, "examples", 8) == 0) {
             return examples_token;
         }
+        if (strnlen(string_token, 3) == 2 && strncmp(string_token, "to", 2) == 0) {
+            return convert_token;
+        }
         UnitType unit = string_to_unit(string_token);
         if (unit != UNIT_UNKNOWN) {
             return token_new_unit(unit);
