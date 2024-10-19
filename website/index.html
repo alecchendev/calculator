@@ -125,6 +125,7 @@
     <script>
         // Array to keep track of input-output history
         let history = [];
+        let history_pos = 0;
 
         function processInput() {
 
@@ -169,6 +170,7 @@
 
             // Clear the input box
             inputElement.value = '';
+            history_pos = history.length;
         }
 
         function renderHistory(historyElement) {
@@ -192,6 +194,29 @@
                 event.preventDefault();
                 processInput();
             }
+            let up = (event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p')) && !event.shiftKey;
+            let down = (event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n')) && !event.shiftKey;
+            if (down) {
+                event.preventDefault();
+                if (history_pos < history.length) {
+                    history_pos += 1;
+                    if (history_pos === history.length) {
+                        document.getElementById('inputBox').value = '';
+                    } else {
+                        document.getElementById('inputBox').value = history[history_pos].input;
+                    }
+                }
+            }
+            if (up) {
+                event.preventDefault();
+                if (history_pos > 0) {
+                    history_pos -= 1;
+                    document.getElementById('inputBox').value = history[history_pos].input;
+                }
+            }
+        });
+
+        document.getElementById('inputBox').addEventListener('keydown', function(event) {
         });
     </script>
 </body>
