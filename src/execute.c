@@ -68,46 +68,48 @@ bool execute_line_inner(const char *input, char *output, size_t output_len, Memo
     String err = string_empty(arena);
     if (!check_valid_expr(expr, &err, arena)) {
         memcpy(output, err.s, err.len);
-    } else if (expr.type == EXPR_SET_VAR) {
-        memset(output, 0, output_len);
-        unsigned char * var_name = expr.expr.binary_expr.left->expr.var_name;
-        Expression value = *expr.expr.binary_expr.right;
-        Unit unit = check_unit(value, *mem, &err, arena);
-        if (is_unit_unknown(unit)) {
-            memcpy(output, err.s, err.len);
-        } else {
-            if (expr_is_number(value.type)) {
-                double result = evaluate(value, *mem, &err, arena);
-                if (err.len > 0) {
-                    memcpy(output, err.s, err.len);
-                } else {
-                    value = expr_new_const_unit(result, expr_new_unit_full(unit, repl_arena),
-                        repl_arena);
-                }
-            } else {
-                value = expr_new_unit_full(unit, repl_arena);
-            }
-            if (err.len == 0) {
-                String msg = display_var(var_name, value, false, arena);
-                memcpy(output, msg.s, msg.len);
-                memory_add_var(mem, var_name, value, repl_arena);
-            }
-        }
-    } else {
-        Unit unit = check_unit(expr, *mem, &err, arena);
-        if (is_unit_unknown(unit)) {
-            memcpy(output, err.s, err.len);
-        } else if (expr_is_number(expr.type)) {
-            double result = evaluate(expr, *mem, &err, arena);
-            if (err.len > 0) {
-                memcpy(output, err.s, err.len);
-            } else {
-                snprintf(output, output_len, "%g %s", result, display_unit(unit, arena));
-            }
-        } else {
-            snprintf(output, output_len, "%s", display_unit(unit, arena));
-        }
+        return false;
     }
+
+    unsigned char *var_name = NULL;
+    Expression value = expr;
+    if (expr.type == EXPR_SET_VAR) {
+        var_name = expr.expr.binary_expr.left->expr.var_name;
+        value = *expr.expr.binary_expr.right;
+    }
+
+    Unit unit = check_unit(value, *mem, &err, arena);
+    if (is_unit_unknown(unit)) {
+        memcpy(output, err.s, err.len);
+        return false;
+    }
+
+    if (!expr_is_number(value.type) && expr.type != EXPR_SET_VAR) {
+        snprintf(output, output_len, "%s", display_unit(unit, arena));
+        return false;
+    } else if (!expr_is_number(value.type) && expr.type == EXPR_SET_VAR) {
+        value = expr_new_unit_full(unit, repl_arena);
+        String msg = display_var(var_name, value, false, arena);
+        memcpy(output, msg.s, msg.len);
+        memory_add_var(mem, var_name, value, repl_arena);
+        return false;
+    }
+
+    double result = evaluate(value, *mem, &err, arena);
+    if (err.len > 0) {
+        memcpy(output, err.s, err.len);
+        return false;
+    }
+    if (expr.type != EXPR_SET_VAR) {
+        snprintf(output, output_len, "%g %s", result, display_unit(unit, arena));
+        return false;
+    }
+
+    value = expr_new_const_unit(result, expr_new_unit_full(unit, repl_arena),
+        repl_arena);
+    String msg = display_var(var_name, value, false, arena);
+    memcpy(output, msg.s, msg.len);
+    memory_add_var(mem, var_name, value, repl_arena);
     return false;
 }
 
