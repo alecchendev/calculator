@@ -253,7 +253,7 @@ Unit check_unit(Expression expr, Memory mem, String *err, Arena *arena) {
             *err = string_new_fmt(arena, "Cannot compose units of same category: Left: %s Right: %s",
                 display_unit(left, arena), display_unit(right, arena));
         }
-    } else if (expr.type == EXPR_DIV || expr.type == EXPR_DIV_UNIT) {
+    } else if (expr.type == EXPR_DIV || expr.type == EXPR_INT_DIV || expr.type == EXPR_DIV_UNIT) {
         debug("dividing units\n");
         // TODO: reject div unit for same category
         Unit right_dup = unit_new(right.types, right.degrees, right.length, arena);

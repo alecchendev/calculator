@@ -434,6 +434,7 @@ void test_check_unit(void *case_idx_opaque) {
         {"1 km + 1", unit_new_unknown(&case_arena)},
         {"1 -> km", unit_new_unknown(&case_arena)},
         {"1 m / s", unit_new((UnitType[]){UNIT_METER, UNIT_SECOND}, (int[]){1, -1}, 2, &case_arena)},
+        {"5 m // 2 s", unit_new((UnitType[]){UNIT_METER, UNIT_SECOND}, (int[]){1, -1}, 2, &case_arena)},
         {"1 m^2 / s^2 kg^2", unit_new((UnitType[]){UNIT_METER, UNIT_SECOND, UNIT_KILOGRAM},
             (int[]){2, -2, -2}, 3, &case_arena)},
         {"1 m^2 s^3 / kg^2", unit_new((UnitType[]){UNIT_METER, UNIT_SECOND, UNIT_KILOGRAM},
