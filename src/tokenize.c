@@ -19,6 +19,7 @@ enum TokenType {
     TOK_SUB,
     TOK_MUL,
     TOK_DIV,
+    TOK_INT_DIV,
     TOK_CARET,
     TOK_WHITESPACE,
     TOK_EXAMPLES,
@@ -75,6 +76,7 @@ const Token add_token = {TOK_ADD};
 const Token sub_token = {TOK_SUB};
 const Token mul_token = {TOK_MUL};
 const Token div_token = {TOK_DIV};
+const Token int_div_token = {TOK_INT_DIV};
 const Token caret_token = {TOK_CARET};
 const Token convert_token = {TOK_CONVERT};
 const Token equals_token = {TOK_EQUALS};
@@ -167,6 +169,12 @@ Token next_token(const char *input, size_t *pos, size_t length, Arena *arena) {
             token = mul_token;
         } else if (input[*pos] == '/') {
             token = div_token;
+            (*pos)++;
+            if (input[*pos] == '/') {
+                token = int_div_token;
+            } else {
+                (*pos)--;
+            }
         } else if (input[*pos] == '^'){
             token = caret_token;
         } else {
@@ -275,6 +283,8 @@ String token_string(Token token, Arena *arena) {
             return string_new("*", arena);
         case TOK_DIV:
             return string_new("/", arena);
+        case TOK_INT_DIV:
+            return string_new("//", arena);
         case TOK_WHITESPACE:
             return string_new("whitespace", arena);
         case TOK_UNIT:

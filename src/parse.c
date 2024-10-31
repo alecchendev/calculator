@@ -10,7 +10,7 @@
 bool is_bin_op(TokenType type) {
     switch (type) {
         case TOK_ADD: case TOK_SUB: case TOK_MUL:
-        case TOK_DIV: case TOK_CARET: case TOK_CONVERT:
+        case TOK_DIV: case TOK_INT_DIV: case TOK_CARET: case TOK_CONVERT:
         case TOK_EQUALS:
             return true;
         case TOK_END: case TOK_INVALID: case TOK_QUIT: case TOK_HELP:
@@ -28,6 +28,7 @@ int precedence(TokenType op, size_t idx, bool prev_is_bin_op, bool curr_is_num, 
     if (op == TOK_SUB && idx != 0 && !prev_is_bin_op) return 8; // Not negation
     if (op == TOK_MUL) return 7;
     if (op == TOK_DIV && !next_is_unit) return 7;
+    if (op == TOK_INT_DIV) return 7;
     if (op == TOK_SUB && !prev_is_bin_op) return 6; // Normal negation
     // This function will only be called when we are checking
     // for tokens with length > 1, so this signals a constant
@@ -47,7 +48,7 @@ int precedence(TokenType op, size_t idx, bool prev_is_bin_op, bool curr_is_num, 
 bool left_associative(TokenType op, size_t idx, bool prev_is_bin_op, bool curr_is_unit) {
     if (op == TOK_ADD) return true;
     if (op == TOK_SUB && idx != 0 && !prev_is_bin_op) return true;
-    if (op == TOK_MUL || op == TOK_DIV) return true;
+    if (op == TOK_MUL || op == TOK_DIV || op == TOK_INT_DIV) return true;
     if (op == TOK_NUM) return false;
     if (op == TOK_UNIT && idx != 0) return true;
     if (op == TOK_VAR && idx != 0 && curr_is_unit) return true;
@@ -141,6 +142,8 @@ Expression parse(TokenString tokens, Memory mem, Arena *arena) {
         type = EXPR_DIV;
     } else if (op == TOK_DIV) {
         type = EXPR_DIV_UNIT;
+    } else if (op == TOK_INT_DIV) {
+        type = EXPR_INT_DIV;
     } else if (op == TOK_NUM || (op == TOK_VAR && token_is_num(tokens.tokens[op_idx], mem))) {
         type = EXPR_CONST_UNIT;
     } else if (op == TOK_UNIT || (op == TOK_VAR && token_is_unit(tokens.tokens[op_idx], mem))) {

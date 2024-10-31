@@ -1,5 +1,6 @@
 #pragma once
 
+#include <math.h>
 #include <stdarg.h>
 #include "memory.c"
 #include "unit.c"
@@ -57,7 +58,7 @@ bool check_valid_expr(Expression expr, String *err, Arena *arena) {
             return false;
         case EXPR_CONST_UNIT: case EXPR_COMP_UNIT: case EXPR_ADD: case EXPR_SUB:
         case EXPR_MUL: case EXPR_DIV: case EXPR_CONVERT: case EXPR_POW: case EXPR_DIV_UNIT:
-        case EXPR_SET_VAR:
+        case EXPR_SET_VAR: case EXPR_INT_DIV:
             left_type = expr.expr.binary_expr.left->type;
             right_type = expr.expr.binary_expr.right->type;
             debug("curr: %d left: %d right: %d\n", expr.type, left_type, right_type);
@@ -98,7 +99,7 @@ bool check_valid_expr(Expression expr, String *err, Arena *arena) {
             *err = string_new_fmt(arena, invalid_comp_unit_msg,
                 display_expr_op(left_type), display_expr_op(right_type));
             return false;
-        case EXPR_ADD: case EXPR_SUB: case EXPR_MUL: case EXPR_DIV:
+        case EXPR_ADD: case EXPR_SUB: case EXPR_MUL: case EXPR_DIV: case EXPR_INT_DIV:
             if ((expr_is_number(left_type) && expr_is_number(right_type)) ||
                 (expr.type == EXPR_DIV && expr_is_unit(left_type) && expr_is_unit(right_type))) {
                 return true;
@@ -288,7 +289,7 @@ double evaluate(Expression expr, Memory mem, String *err, Arena *arena) {
             return evaluate(*expr.expr.binary_expr.left, mem, err, arena);
         case EXPR_SET_VAR:
             assert(false);
-        case EXPR_ADD: case EXPR_SUB: case EXPR_MUL: case EXPR_DIV:
+        case EXPR_ADD: case EXPR_SUB: case EXPR_MUL: case EXPR_DIV: case EXPR_INT_DIV:
             left_unit = check_unit(*expr.expr.binary_expr.left, mem, err, arena);
             right_unit = check_unit(*expr.expr.binary_expr.right, mem, err, arena);
             left = evaluate(*expr.expr.binary_expr.left, mem, err, arena);
@@ -313,12 +314,12 @@ double evaluate(Expression expr, Memory mem, String *err, Arena *arena) {
             return left - right;
         case EXPR_MUL:
             return left * right;
-        case EXPR_DIV:
+        case EXPR_DIV: case EXPR_INT_DIV:
             if (right == 0) {
                 *err = string_new_fmt(arena, "Cannot divide by zero");
                 return 0;
             }
-            return left / right;
+            return expr.type == EXPR_DIV ? left / right : floor(left / right);
         default:
             assert(false);
             return 0;

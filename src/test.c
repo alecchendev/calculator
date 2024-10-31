@@ -205,7 +205,7 @@ bool exprs_equal(Expression a, Expression b, Arena *arena) {
         case EXPR_NEG:
             return exprs_equal(*a.expr.unary_expr.right, *b.expr.unary_expr.right, arena);
         case EXPR_CONST_UNIT: case EXPR_COMP_UNIT:
-        case EXPR_ADD: case EXPR_SUB: case EXPR_MUL: case EXPR_DIV:
+        case EXPR_ADD: case EXPR_SUB: case EXPR_MUL: case EXPR_DIV: case EXPR_INT_DIV:
         case EXPR_CONVERT: case EXPR_POW: case EXPR_DIV_UNIT: case EXPR_SET_VAR:
             if (!exprs_equal(*a.expr.binary_expr.left, *b.expr.binary_expr.left, arena)) {
                 return false;
@@ -486,6 +486,8 @@ void test_evaluate(void *case_idx_opaque) {
         {"20 - 30", -10, false},
         {"21 * 2", 42, false},
         {"1 / 2", 0.5, false},
+        {"5 // 2", 2, false},
+        {"-5 // 2", -3, false},
         // Order of operations
         {"1 + 2 * 3", 7, false},
         {"2 / 4 + 1", 1.5, false},

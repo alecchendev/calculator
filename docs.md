@@ -18,6 +18,8 @@ Multiplication: 1 * 2
 
 Division: 1 / 2
 
+Floor division: 1 // 2
+
 Negation: -3
 
 Scientific notation: 4.5e6 (negative degrees don't work, e.g. 4.5e-6)

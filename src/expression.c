@@ -36,6 +36,7 @@ typedef enum {
     EXPR_SUB,
     EXPR_MUL,
     EXPR_DIV,
+    EXPR_INT_DIV,
     EXPR_CONVERT,
     EXPR_POW,
     EXPR_VAR,
@@ -114,7 +115,7 @@ bool expr_is_bin(ExprType type) {
         case EXPR_INVALID:
             return false;
         case EXPR_CONST_UNIT: case EXPR_COMP_UNIT: case EXPR_DIV_UNIT:
-        case EXPR_ADD: case EXPR_SUB: case EXPR_MUL: case EXPR_DIV:
+        case EXPR_ADD: case EXPR_SUB: case EXPR_MUL: case EXPR_DIV: case EXPR_INT_DIV:
         case EXPR_CONVERT: case EXPR_POW: case EXPR_SET_VAR:
             return true;
     }
@@ -125,7 +126,7 @@ bool expr_is_unit(ExprType type) {
         case EXPR_UNIT: case EXPR_COMP_UNIT: case EXPR_POW: case EXPR_DIV_UNIT:
             return true;
         case EXPR_CONSTANT: case EXPR_NEG: case EXPR_CONST_UNIT: case EXPR_VAR:
-        case EXPR_ADD: case EXPR_SUB: case EXPR_MUL:
+        case EXPR_ADD: case EXPR_SUB: case EXPR_MUL: case EXPR_INT_DIV:
         case EXPR_DIV: case EXPR_CONVERT: case EXPR_SET_VAR:
         case EXPR_INVALID:
             return false;
@@ -136,7 +137,7 @@ bool expr_is_number(ExprType type) {
     switch (type) {
         case EXPR_CONSTANT: case EXPR_NEG: case EXPR_CONST_UNIT:
         case EXPR_ADD: case EXPR_SUB: case EXPR_MUL:
-        case EXPR_DIV: case EXPR_CONVERT:
+        case EXPR_DIV: case EXPR_INT_DIV: case EXPR_CONVERT:
             return true;
         case EXPR_UNIT: case EXPR_COMP_UNIT: case EXPR_POW: case EXPR_SET_VAR:
         case EXPR_VAR: case EXPR_DIV_UNIT:
@@ -153,6 +154,7 @@ const char *display_expr_op(ExprType type) {
         case EXPR_SUB: return "-";
         case EXPR_MUL: return "*";
         case EXPR_DIV: return "/";
+        case EXPR_INT_DIV: return "//";
         case EXPR_DIV_UNIT: return "div unit";
         case EXPR_CONVERT: return "->";
         case EXPR_POW: return "^";
