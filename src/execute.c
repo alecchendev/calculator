@@ -292,6 +292,7 @@ void repl(FILE *input_fd) {
         if (strnlen(output, sizeof(output)) > 0) printf("%s\n", output);
 
         if (history.len > 0 && strncmp(input.data, history.history[history.len - 1].data, MAX_INPUT) == 0) {
+            history.pos = history.len;
             continue;
         }
 
