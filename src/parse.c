@@ -15,7 +15,7 @@ bool is_bin_op(TokenType type) {
             return true;
         case TOK_END: case TOK_INVALID: case TOK_QUIT: case TOK_HELP:
         case TOK_NUM: case TOK_VAR: case TOK_WHITESPACE: case TOK_UNIT:
-        case TOK_MEMORY: case TOK_SHOW_UNITS: case TOK_EXAMPLES:
+        case TOK_MEMORY: case TOK_SHOW_UNITS: case TOK_EXAMPLES: case TOK_ADD_UNIT:
             return false;
     }
 }
@@ -67,7 +67,9 @@ bool token_is_unit(Token token, Memory mem) {
     return token.type == TOK_UNIT ||
         (token.type == TOK_VAR &&
         memory_contains_var(mem, token.var_name) &&
-        expr_is_unit(memory_get_var(mem, token.var_name).type));
+        expr_is_unit(memory_get_var(mem, token.var_name).type)) ||
+        (token.type == TOK_VAR &&
+        memory_contains_unit(mem, token.var_name));
 }
 
 // Only time this should return EXPR_INVALID
@@ -85,7 +87,7 @@ Expression parse(TokenString tokens, Memory mem, Arena *arena) {
     }
     if (tokens.length == 1 && tokens.tokens[0].type == TOK_UNIT) {
         debug("unit\n");
-        return expr_new_unit(tokens.tokens[0].unit_type, arena);
+        return expr_new_unit_builtin(tokens.tokens[0].unit_type, arena);
     }
     if (tokens.length == 1 && tokens.tokens[0].type == TOK_NUM) {
         debug("constant\n");

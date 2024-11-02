@@ -75,8 +75,12 @@ Expression expr_new_unit_full(Unit unit, Arena *arena) {
     return (Expression) { .type = EXPR_UNIT, .expr = { .unit = unit_dup }};
 }
 
-Expression expr_new_unit(UnitType unit_type, Arena *arena) {
-    return expr_new_unit_full(unit_new_single(unit_type, 1, arena), arena);
+Expression expr_new_unit_builtin(UnitType unit_type, Arena *arena) {
+    return expr_new_unit_full(unit_new_single_builtin(unit_type, 1, arena), arena);
+}
+
+Expression expr_new_unit(UnitBasic unit_basic, Arena *arena) {
+    return expr_new_unit_full(unit_new_single(unit_basic, 1, arena), arena);
 }
 
 Expression expr_new_neg(Expression right_value, Arena *arena) {
@@ -98,7 +102,7 @@ Expression expr_new_const_unit(double value, Expression unit_expr, Arena *arena)
 }
 
 Expression expr_new_unit_degree(UnitType unit_type, Expression degree_expr, Arena *arena) {
-    return expr_new_bin(EXPR_POW, expr_new_unit(unit_type, arena), degree_expr, arena);
+    return expr_new_bin(EXPR_POW, expr_new_unit_builtin(unit_type, arena), degree_expr, arena);
 }
 
 Expression expr_new_unit_comp(Expression unit_expr_1, Expression unit_expr_2, Arena *arena) {

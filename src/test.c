@@ -80,7 +80,8 @@ bool tokens_equal(Token a, Token b) {
         return true;
     }
     if (a.type == TOK_UNIT && a.unit_type != b.unit_type) {
-        printf("Expected unit type %s, got %s\n", unit_strings[b.unit_type], unit_strings[a.unit_type]);
+        printf("Expected unit type %s, got %s\n", builtin_unit_strings[b.unit_type],
+            builtin_unit_strings[a.unit_type]);
         return false;
     }
     if (a.type == TOK_NUM && !eq_diff(a.number, b.number)) {
@@ -246,12 +247,12 @@ void test_parse(void *case_idx_opaque) {
             &case_arena),
         &case_arena)},
         {"1 cm -2kg", expr_new_bin(EXPR_SUB,
-            expr_new_const_unit(1, expr_new_unit(UNIT_CENTIMETER, &case_arena), &case_arena),
-            expr_new_const_unit(2, expr_new_unit(UNIT_KILOGRAM, &case_arena), &case_arena),
+            expr_new_const_unit(1, expr_new_unit_builtin(UNIT_CENTIMETER, &case_arena), &case_arena),
+            expr_new_const_unit(2, expr_new_unit_builtin(UNIT_KILOGRAM, &case_arena), &case_arena),
         &case_arena)},
         {"5 mi / 4 h", expr_new_bin(EXPR_DIV,
-            expr_new_const_unit(5, expr_new_unit(UNIT_MILE, &case_arena), &case_arena),
-            expr_new_const_unit(4, expr_new_unit(UNIT_HOUR, &case_arena), &case_arena),
+            expr_new_const_unit(5, expr_new_unit_builtin(UNIT_MILE, &case_arena), &case_arena),
+            expr_new_const_unit(4, expr_new_unit_builtin(UNIT_HOUR, &case_arena), &case_arena),
         &case_arena)},
         // Negative
         {"2 * - 3", expr_new_bin(EXPR_MUL, expr_new_const(2),
@@ -259,7 +260,7 @@ void test_parse(void *case_idx_opaque) {
         {"-2 * 3", expr_new_bin(EXPR_MUL, expr_new_neg(expr_new_const(2), &case_arena),
             expr_new_const(3), &case_arena)},
         {"-2 cm * 3", expr_new_bin(EXPR_MUL,
-            expr_new_neg(expr_new_const_unit(2, expr_new_unit(UNIT_CENTIMETER, &case_arena), &case_arena), &case_arena),
+            expr_new_neg(expr_new_const_unit(2, expr_new_unit_builtin(UNIT_CENTIMETER, &case_arena), &case_arena), &case_arena),
             expr_new_const(3), &case_arena)},
         {"- 2", expr_new_neg(expr_new_const(2), &case_arena)},
         {"1 - - 2", expr_new_bin(EXPR_SUB, expr_new_const(1),
@@ -310,7 +311,7 @@ void test_parse(void *case_idx_opaque) {
                         expr_new_unit_degree(UNIT_OUNCE, expr_new_neg(expr_new_neg(expr_new_const(5), &case_arena), &case_arena), &case_arena),
                     &case_arena),
                 &case_arena), &case_arena), &case_arena),
-                expr_new_neg(expr_new_neg(expr_new_neg(expr_new_const_unit(6, expr_new_unit(UNIT_POUND, &case_arena), &case_arena), &case_arena), &case_arena), &case_arena),
+                expr_new_neg(expr_new_neg(expr_new_neg(expr_new_const_unit(6, expr_new_unit_builtin(UNIT_POUND, &case_arena), &case_arena), &case_arena), &case_arena), &case_arena),
             &case_arena),
             expr_new_neg(expr_new_neg(expr_new_const_unit(7, expr_new_unit_degree(UNIT_OUNCE, expr_new_neg(expr_new_const(8), &case_arena), &case_arena), &case_arena), &case_arena), &case_arena),
         &case_arena)},
@@ -407,22 +408,22 @@ void test_check_unit(void *case_idx_opaque) {
     const CheckUnitCase cases[] = {
         {"79", unit_new_none(&case_arena)},
         {"1 + 2 * 3", unit_new_none(&case_arena)},
-        {"1 km * 2 km * 3km", unit_new_single(UNIT_KILOMETER, 3, &case_arena)},
+        {"1 km * 2 km * 3km", unit_new_single_builtin(UNIT_KILOMETER, 3, &case_arena)},
         {"1 mi + 1h", unit_new_unknown(&case_arena)},
-        {"1 km * 2 oz * 3 h", unit_new((UnitType[]){UNIT_KILOMETER, UNIT_OUNCE, UNIT_HOUR}, (int[]){1, 1, 1}, 3, &case_arena)},
-        {"1km*2mi*3h*4km*5mi*2s", unit_new((UnitType[]){UNIT_KILOMETER, UNIT_HOUR}, (int[]){4, 2}, 2, &case_arena)},
+        {"1 km * 2 oz * 3 h", unit_new_builtin((UnitType[]){UNIT_KILOMETER, UNIT_OUNCE, UNIT_HOUR}, (int[]){1, 1, 1}, 3, &case_arena)},
+        {"1km*2mi*3h*4km*5mi*2s", unit_new_builtin((UnitType[]){UNIT_KILOMETER, UNIT_HOUR}, (int[]){4, 2}, 2, &case_arena)},
         {"1km*2mi*3h*4km*5mi*2s+3km", unit_new_unknown(&case_arena)},
-        {"1km*2mi/4km", unit_new((UnitType[]){UNIT_KILOMETER}, (int[]){1}, 1, &case_arena)},
-        {"50 km ^ -2 ^ 3", unit_new_single(UNIT_KILOMETER, -6, &case_arena)},
-        {"50 km ^ -2 km", unit_new_single(UNIT_KILOMETER, -1, &case_arena)},
+        {"1km*2mi/4km", unit_new_builtin((UnitType[]){UNIT_KILOMETER}, (int[]){1}, 1, &case_arena)},
+        {"50 km ^ -2 ^ 3", unit_new_single_builtin(UNIT_KILOMETER, -6, &case_arena)},
+        {"50 km ^ -2 km", unit_new_single_builtin(UNIT_KILOMETER, -1, &case_arena)},
         {"1 km * 2 km ^-1", unit_new_none(&case_arena)},
         {"1 kg * 2 g ^-1", unit_new_none(&case_arena)},
         {"2 km m cm", unit_new_unknown(&case_arena)},
-        {"50 km s^-1 + 50 s^-1 km", unit_new((UnitType[]){UNIT_KILOMETER, UNIT_SECOND},
+        {"50 km s^-1 + 50 s^-1 km", unit_new_builtin((UnitType[]){UNIT_KILOMETER, UNIT_SECOND},
             (int[]){1, -1}, 2, &case_arena)},
-        {"50 s^-1 km + 50 km s^-1", unit_new((UnitType[]){UNIT_SECOND, UNIT_KILOMETER},
+        {"50 s^-1 km + 50 km s^-1", unit_new_builtin((UnitType[]){UNIT_SECOND, UNIT_KILOMETER},
             (int[]){-1, 1}, 2, &case_arena)},
-        {"1km -> mi", unit_new_single(UNIT_MILE, 1, &case_arena)},
+        {"1km -> mi", unit_new_single_builtin(UNIT_MILE, 1, &case_arena)},
         {"1km -> s", unit_new_unknown(&case_arena)},
         {"1kg -> h", unit_new_unknown(&case_arena)},
         {"1 lb -> in", unit_new_unknown(&case_arena)},
@@ -430,14 +431,14 @@ void test_check_unit(void *case_idx_opaque) {
         {"m ^m -> m ^ m", unit_new_unknown(&case_arena)},
         {"2 m^2 -> cm^1", unit_new_unknown(&case_arena)},
         {"2 km s^-1 -> kg h^-1", unit_new_unknown(&case_arena)},
-        {"1 kg * 2 kg ^ -3 km", unit_new((UnitType[]){UNIT_KILOGRAM, UNIT_KILOMETER}, (int[]){-2, 1}, 2, &case_arena)},
+        {"1 kg * 2 kg ^ -3 km", unit_new_builtin((UnitType[]){UNIT_KILOGRAM, UNIT_KILOMETER}, (int[]){-2, 1}, 2, &case_arena)},
         {"1 km + 1", unit_new_unknown(&case_arena)},
         {"1 -> km", unit_new_unknown(&case_arena)},
-        {"1 m / s", unit_new((UnitType[]){UNIT_METER, UNIT_SECOND}, (int[]){1, -1}, 2, &case_arena)},
-        {"5 m // 2 s", unit_new((UnitType[]){UNIT_METER, UNIT_SECOND}, (int[]){1, -1}, 2, &case_arena)},
-        {"1 m^2 / s^2 kg^2", unit_new((UnitType[]){UNIT_METER, UNIT_SECOND, UNIT_KILOGRAM},
+        {"1 m / s", unit_new_builtin((UnitType[]){UNIT_METER, UNIT_SECOND}, (int[]){1, -1}, 2, &case_arena)},
+        {"5 m // 2 s", unit_new_builtin((UnitType[]){UNIT_METER, UNIT_SECOND}, (int[]){1, -1}, 2, &case_arena)},
+        {"1 m^2 / s^2 kg^2", unit_new_builtin((UnitType[]){UNIT_METER, UNIT_SECOND, UNIT_KILOGRAM},
             (int[]){2, -2, -2}, 3, &case_arena)},
-        {"1 m^2 s^3 / kg^2", unit_new((UnitType[]){UNIT_METER, UNIT_SECOND, UNIT_KILOGRAM},
+        {"1 m^2 s^3 / kg^2", unit_new_builtin((UnitType[]){UNIT_METER, UNIT_SECOND, UNIT_KILOGRAM},
             (int[]){2, 3, -2}, 3, &case_arena)}
     };
     const size_t num_cases = sizeof(cases) / sizeof(CheckUnitCase);
@@ -535,10 +536,10 @@ void test_unit_mirror(void *_) {
                 assert(two_to_one == 0);
             } else if (unit_category(unit_type1) == UNIT_CATEGORY_TEMPERATURE){
                 double two_to_one_to_two = unit_conversion(two_to_one, unit_type1, unit_type2);
-                debug("1: %s 2: %s two_to_one_to_two: %lf\n", unit_strings[unit_type1], unit_strings[unit_type2], one_to_two, two_to_one_to_two);
+                debug("1: %s 2: %s two_to_one_to_two: %lf\n", builtin_unit_strings[unit_type1], builtin_unit_strings[unit_type2], two_to_one_to_two);
                 assert(eq_diff(two_to_one_to_two, 1));
             } else {
-                debug("1: %s 2: %s 1 / one_to_two: %lf two_to_one: %lf\n", unit_strings[unit_type1], unit_strings[unit_type2], 1 / one_to_two, two_to_one);
+                debug("1: %s 2: %s 1 / one_to_two: %lf two_to_one: %lf\n", builtin_unit_strings[unit_type1], builtin_unit_strings[unit_type2], 1 / one_to_two, two_to_one);
                 assert(eq_diff(1 / one_to_two, two_to_one));
             }
         }
@@ -566,11 +567,23 @@ void test_memory_case(void *c_opaque) {
     Unit unit;
     for (size_t i = 0; i < c->n_inputs; i++) {
         TokenString tokens = tokenize(c->input[i], &line_arena);
+        if (tokens.length == 2 && tokens.tokens[0].type == TOK_ADD_UNIT
+            && tokens.tokens[1].type == TOK_VAR) {
+            unsigned char *unit_name = tokens.tokens[1].var_name;
+            if (!memory_contains_unit(mem, unit_name)) {
+                memory_add_unit(&mem, unit_name, &mem_arena);
+            }
+            if (i < c->n_inputs - 1) arena_clear(&line_arena);
+            continue;
+        }
         Expression expr = parse(tokens, mem, &line_arena);
         substitute_variables(&expr, mem);
+        substitute_units(&expr, mem, &line_arena);
         display_expr(0, expr, &line_arena);
         String err = string_empty(&line_arena);
-        assert(check_valid_expr(expr, &err, &line_arena));
+        bool valid = check_valid_expr(expr, &err, &line_arena);
+        debug("err: %s\n", err.s);
+        assert(valid);
         if (expr.type == EXPR_SET_VAR) {
             unsigned char * var_name = expr.expr.binary_expr.left->expr.var_name;
             Expression value = *expr.expr.binary_expr.right;
@@ -613,22 +626,37 @@ void test_memory(void *case_idx_opaque) {
     const char *case13_in[] = {"x = 3", "kg ^ x"};
     const char *case14_in[] = {"x = 3 m", "kg ^ x"};
     const char *case15_in[] = {"x = kg m", "x ^ 2"};
+    // User defined units
+    const char *case16_in[] = {"addunit liter", "3 liter * 4 liter / 6 liter"};
+    const char *case17_in[] = {"addunit liter", "addunit bob", "3 km bob liter^2 * 4 m liter bob"};
+    const char *case18_in[] = {"addunit bob", "addunit liter", "3 km bob liter^2 * 4 m liter bob / 2 bob^-1 /liter^-6"};
     const MemoryCase cases[] = {
         {case1_in, 2, 7, unit_new_none(&arena)},
         {case2_in, 2, 8, unit_new_none(&arena)},
-        {case3_in, 2, 0, unit_new((UnitType[]){UNIT_SECOND, UNIT_KILOMETER}, (int[]){1, -1}, 2, &arena)},
+        {case3_in, 2, 0, unit_new_builtin((UnitType[]){UNIT_SECOND, UNIT_KILOMETER}, (int[]){1, -1}, 2, &arena)},
         {case4_in, 2, 4, unit_new_none(&arena)},
         {case5_in, 2, 13, unit_new_none(&arena)},
-        {case6_in, 2, 2.5, unit_new_single(UNIT_KILOMETER, 1, &arena)},
-        {case7_in, 2, 2.5, unit_new_single(UNIT_KILOMETER, 1, &arena)},
-        {case8_in, 2, 0, unit_new_single(UNIT_KILOMETER, 1, &arena)},
-        {case9_in, 3, 3, unit_new_single(UNIT_KILOMETER, 1, &arena)},
-        {case10_in, 3, 3, unit_new((UnitType[]){UNIT_SECOND, UNIT_KILOMETER}, (int[]){1, 1}, 2, &arena)},
-        {case11_in, 2, 1, unit_new((UnitType[]){UNIT_KILOGRAM, UNIT_KILOMETER, UNIT_SECOND}, (int[]){1, 1, 1}, 3, &arena)},
-        {case12_in, 2, 1, unit_new((UnitType[]){UNIT_SECOND, UNIT_KILOGRAM}, (int[]){1, 1}, 2, &arena)},
-        {case13_in, 2, 0, unit_new_single(UNIT_KILOGRAM, 3, &arena)},
+        {case6_in, 2, 2.5, unit_new_single_builtin(UNIT_KILOMETER, 1, &arena)},
+        {case7_in, 2, 2.5, unit_new_single_builtin(UNIT_KILOMETER, 1, &arena)},
+        {case8_in, 2, 0, unit_new_single_builtin(UNIT_KILOMETER, 1, &arena)},
+        {case9_in, 3, 3, unit_new_single_builtin(UNIT_KILOMETER, 1, &arena)},
+        {case10_in, 3, 3, unit_new_builtin((UnitType[]){UNIT_SECOND, UNIT_KILOMETER}, (int[]){1, 1}, 2, &arena)},
+        {case11_in, 2, 1, unit_new_builtin((UnitType[]){UNIT_KILOGRAM, UNIT_KILOMETER, UNIT_SECOND}, (int[]){1, 1, 1}, 3, &arena)},
+        {case12_in, 2, 1, unit_new_builtin((UnitType[]){UNIT_SECOND, UNIT_KILOGRAM}, (int[]){1, 1}, 2, &arena)},
+        {case13_in, 2, 0, unit_new_single_builtin(UNIT_KILOGRAM, 3, &arena)},
         {case14_in, 2, 0, unit_new_unknown(&arena)},
-        {case15_in, 2, 0, unit_new((UnitType[]){UNIT_KILOGRAM, UNIT_METER}, (int[]){2, 2}, 2, &arena)},
+        {case15_in, 2, 0, unit_new_builtin((UnitType[]){UNIT_KILOGRAM, UNIT_METER}, (int[]){2, 2}, 2, &arena)},
+        {case16_in, 2, 2, unit_new((UnitBasic[]){unit_basic(unit_type_user_min(), "liter")}, (int[]){1}, 1, &arena)},
+        {case17_in, 3, 0.012, unit_new((UnitBasic[]){
+            unit_basic_builtin(UNIT_KILOMETER),
+            unit_basic(unit_type_user_min()+1, "bob"),
+            unit_basic(unit_type_user_min(), "liter")
+        }, (int[]){2, 2, 3}, 3, &arena)},
+        {case18_in, 3, 0.006, unit_new((UnitBasic[]){
+            unit_basic_builtin(UNIT_KILOMETER),
+            unit_basic(unit_type_user_min(), "bob"),
+            unit_basic(unit_type_user_min()+1, "liter")
+        }, (int[]){2, 3, -3}, 3, &arena)},
     };
     const size_t num_cases = sizeof(cases) / sizeof(MemoryCase);
     bool all_passed = true;
@@ -650,11 +678,11 @@ void test_memory_show(void *case_idx_opaque) {
     memory_add_var(&mem, var1, val1, &arena);
 
     unsigned char *var2 = (unsigned char *)"y";
-    Expression val2 = expr_new_unit(UNIT_KILOGRAM, &arena);
+    Expression val2 = expr_new_unit_builtin(UNIT_KILOGRAM, &arena);
     memory_add_var(&mem, var2, val2, &arena);
 
     unsigned char *var3 = (unsigned char *)"z";
-    Expression val3 = expr_new_const_unit(8, expr_new_unit(UNIT_KILOMETER, &arena), &arena);
+    Expression val3 = expr_new_const_unit(8, expr_new_unit_builtin(UNIT_KILOMETER, &arena), &arena);
     memory_add_var(&mem, var3, val3, &arena);
 
     String mem_str = memory_show(mem, &arena);
@@ -678,9 +706,9 @@ void test_display_unit(void *case_idx_opaque) {
 #else
         {unit_new_none(&arena), ""},
 #endif
-        {unit_new_single(UNIT_MINUTE, 1, &arena), "min"},
-        {unit_new_single(UNIT_CENTIMETER, 2, &arena), "cm^2"},
-        {unit_new_single(UNIT_KILOGRAM, -2, &arena), "kg^-2"},
+        {unit_new_single_builtin(UNIT_MINUTE, 1, &arena), "min"},
+        {unit_new_single_builtin(UNIT_CENTIMETER, 2, &arena), "cm^2"},
+        {unit_new_single_builtin(UNIT_KILOGRAM, -2, &arena), "kg^-2"},
         {unit_new_unknown(&arena), "unknown"},
     };
     const size_t num_cases = sizeof(cases) / sizeof(DisplayUnitCase);

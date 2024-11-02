@@ -61,9 +61,35 @@ bool execute_line_inner(const char *input, char *output, size_t output_len, Memo
         }
         return false;
     }
+    if (tokens.length == 2 && tokens.tokens[0].type == TOK_ADD_UNIT
+        && tokens.tokens[1].type != TOK_VAR) {
+        snprintf(output, output_len, "Invalid unit name: %s", token_string(tokens.tokens[1], arena).s);
+        return false;
+    }
+    if (tokens.length == 2 && tokens.tokens[0].type == TOK_ADD_UNIT) {
+        if (tokens.tokens[1].type == TOK_UNIT) {
+            snprintf(output, output_len, "\"%s\" is already a builtin unit", token_string(tokens.tokens[1], arena).s);
+            return false;
+        }
+        if (tokens.tokens[1].type != TOK_VAR) {
+            snprintf(output, output_len, "Invalid unit name: %s", token_string(tokens.tokens[1], arena).s);
+            return false;
+        }
+        unsigned char *unit_name = tokens.tokens[1].var_name;
+        if (memory_contains_var(*mem, unit_name)) {
+            snprintf(output, output_len, "\"%s\" is already a variable", unit_name);
+        } else if (memory_contains_unit(*mem, unit_name)) {
+            snprintf(output, output_len, "Unit already exists: %s", unit_name);
+        } else {
+            memory_add_unit(mem, unit_name, repl_arena);
+            snprintf(output, output_len, "Added unit: %s", unit_name);
+        }
+        return false;
+    }
 
     Expression expr = parse(tokens, *mem, arena);
     substitute_variables(&expr, *mem);
+    substitute_units(&expr, *mem, arena);
     display_expr(0, expr, arena);
     String err = string_empty(arena);
     if (!check_valid_expr(expr, &err, arena)) {

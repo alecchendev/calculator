@@ -8,6 +8,9 @@
 #include "debug.c"
 #include "string.c"
 
+// A number representing the unit type.
+// User defined units will be numbers greater than
+// UNIT_UNKNOWN.
 typedef enum UnitType UnitType;
 enum UnitType {
     // Distance
@@ -36,9 +39,14 @@ enum UnitType {
     UNIT_UNKNOWN,
 };
 
+// The minimum value for a user defined unit type.
+int unit_type_user_min() {
+    return UNIT_UNKNOWN + 1;
+}
+
 #define MAX_UNIT_STRING 7
 
-const char *unit_strings[] = {
+const char *builtin_unit_strings[] = {
     // Distance
     "cm",
     "m",
@@ -64,6 +72,21 @@ const char *unit_strings[] = {
     "none",
     "unknown",
 };
+
+typedef struct UnitBasic UnitBasic;
+struct UnitBasic {
+    UnitType type;
+    char *name;
+};
+
+UnitBasic unit_basic(UnitType type, char *name) {
+    return (UnitBasic) { .type = type, .name = name };
+}
+
+UnitBasic unit_basic_builtin(UnitType type) {
+    assert(type < unit_type_user_min());
+    return unit_basic(type, (char *)builtin_unit_strings[type]);
+}
 
 bool string_in_set(char *s, char *set[], size_t set_len) {
     size_t len = strnlen(s, 32);
@@ -155,6 +178,11 @@ UnitCategory unit_category(UnitType type) {
         case UNIT_COUNT:
         case UNIT_UNKNOWN:
             return UNIT_CATEGORY_NONE;
+        default:
+            // User defined units simply have their own category for now
+            // TODO: allow user defined units to share categories
+            // when we add user defined conversions
+            return (UnitCategory)type;
     }
 }
 
@@ -172,7 +200,7 @@ String show_all_units(Arena *arena) {
                 } else {
                     s = string_concat_static(s, ", ", arena);
                 }
-                char *unit_str = (char *)unit_strings[typ];
+                char *unit_str = (char *)builtin_unit_strings[typ];
                 s = string_concat_static(s, unit_str, arena);
             }
         }
@@ -274,42 +302,59 @@ double unit_conversion(double value, UnitType from, UnitType to) {
             return solve_x(to_kelvin(to), kelvin);
         case UNIT_CATEGORY_NONE:
             return value;
+        default:
+            // Assume user defined units are their own category.
+            return value;
     }
 }
 
 typedef struct Unit Unit;
 struct Unit {
-    UnitType *types;
+    UnitBasic *types;
     int *degrees;
     size_t length;
 };
 
 bool is_unit_none(Unit unit) {
-    return unit.length == 1 && unit.types[0] == UNIT_NONE;
+    return unit.length == 1 && unit.types[0].type == UNIT_NONE;
 }
 
 bool is_unit_unknown(Unit unit) {
-    return unit.length == 1 && unit.types[0] == UNIT_UNKNOWN;
+    return unit.length == 1 && unit.types[0].type == UNIT_UNKNOWN;
 }
 
-Unit unit_new(UnitType types[], int degrees[], size_t length, Arena *arena) {
-    UnitType *new_types = arena_alloc(arena, length * sizeof(UnitType));
+Unit unit_new_builtin(UnitType types[], int degrees[], size_t length, Arena *arena) {
+    UnitBasic *new_types = arena_alloc(arena, length * sizeof(UnitBasic));
     int *new_degrees = arena_alloc(arena, length * sizeof(int));
-    memcpy(new_types, types, length * sizeof(UnitType));
+    for (size_t i = 0; i < length; i++) {
+        new_types[i] = unit_basic_builtin(types[i]);
+    }
     memcpy(new_degrees, degrees, length * sizeof(int));
     return (Unit) { .types = new_types, .degrees = new_degrees, .length = length };
 }
 
-Unit unit_new_single(UnitType type, int degree, Arena *arena) {
-    return unit_new(&type, &degree, 1, arena);
+Unit unit_new(UnitBasic types[], int degrees[], size_t length, Arena *arena) {
+    UnitBasic *new_types = arena_alloc(arena, length * sizeof(UnitBasic));
+    int *new_degrees = arena_alloc(arena, length * sizeof(int));
+    memcpy(new_types, types, length * sizeof(UnitBasic));
+    memcpy(new_degrees, degrees, length * sizeof(int));
+    return (Unit) { .types = new_types, .degrees = new_degrees, .length = length };
+}
+
+Unit unit_new_single(UnitBasic basic, int degree, Arena *arena) {
+    return unit_new(&basic, &degree, 1, arena);
+}
+
+Unit unit_new_single_builtin(UnitType type, int degree, Arena *arena) {
+    return unit_new_builtin(&type, &degree, 1, arena);
 }
 
 Unit unit_new_none(Arena *arena) {
-    return unit_new_single(UNIT_NONE, 1, arena);
+    return unit_new_single_builtin(UNIT_NONE, 1, arena);
 }
 
 Unit unit_new_unknown(Arena *arena) {
-    return unit_new_single(UNIT_UNKNOWN, 0, arena);
+    return unit_new_single_builtin(UNIT_UNKNOWN, 0, arena);
 }
 
 #define MAX_UNITS_DISPLAY 32
@@ -334,9 +379,9 @@ char *display_unit(Unit unit, Arena *arena) {
     for (size_t i = 0; i < unit.length; i++) {
         char unit_str[MAX_UNIT_WITH_DEGREE_STRING];
         if (unit.degrees[i] == 1) {
-            snprintf(unit_str, sizeof(unit_str), "%s", unit_strings[unit.types[i]]);
+            snprintf(unit_str, sizeof(unit_str), "%s", unit.types[i].name);
         } else {
-            snprintf(unit_str, sizeof(unit_str), "%s^%d", unit_strings[unit.types[i]], unit.degrees[i]);
+            snprintf(unit_str, sizeof(unit_str), "%s^%d", unit.types[i].name, unit.degrees[i]);
         }
         strncat(str, unit_str, MAX_UNIT_WITH_DEGREE_STRING);
         if (i < unit.length - 1) {
@@ -357,7 +402,7 @@ bool units_equal(Unit a, Unit b, Arena *arena) {
     for (size_t i = 0; i < a.length; i++) {
         bool found = false;
         for (size_t j = 0; j < b.length; j++) {
-            if (a.types[i] == b.types[j] && a.degrees[i] == b.degrees[j]) {
+            if (a.types[i].type == b.types[j].type && a.degrees[i] == b.degrees[j]) {
                 found = true;
                 break;
             }
@@ -377,12 +422,12 @@ double unit_convert(double value, Unit a, Unit b, Arena *arena) {
           display_unit(a, arena), display_unit(b, arena), a.length, b.length);
     for (size_t i = 0; i < a.length; i++) {
         for (size_t j = 0; j < b.length; j++) {
-            if (unit_category(a.types[i]) == unit_category(b.types[j])) {
+            if (unit_category(a.types[i].type) == unit_category(b.types[j].type)) {
                 double new_value = value;
                 double value_degree_1 = pow(value, 1.0 / a.degrees[i]);
-                double converted_degree_1 = unit_conversion(value_degree_1, a.types[i], b.types[j]);
+                double converted_degree_1 = unit_conversion(value_degree_1, a.types[i].type, b.types[j].type);
                 new_value = pow(converted_degree_1, a.degrees[i]);
-                debug("Found convertible: left: %s right: %s degree: %d pre-value: %lf post-value: %lf\n", unit_strings[a.types[i]], unit_strings[b.types[j]], a.degrees[i], value, new_value);
+                debug("Found convertible: left: %s right: %s degree: %d pre-value: %lf post-value: %lf\n", a.types[i].name, b.types[j].name, a.degrees[i], value, new_value);
                 value = new_value;
                 break;
             }
@@ -403,9 +448,9 @@ Unit unit_combine(Unit a, Unit b, bool reject_same_category, Arena *arena) {
     memset(b_leftover, true, b.length * sizeof(bool));
     size_t length = a.length + b.length;
     for (size_t i = 0; i < b.length; i++) {
-        UnitType b_type = b.types[i];
+        UnitType b_type = b.types[i].type;
         for (size_t j = 0; j < a.length; j++) {
-            UnitType a_type = a.types[j];
+            UnitType a_type = a.types[j].type;
             UnitCategory a_cat = unit_category(a_type);
             UnitCategory b_cat = unit_category(b_type);
             if (a_cat == b_cat && a_type != b_type && reject_same_category) {
@@ -422,7 +467,7 @@ Unit unit_combine(Unit a, Unit b, bool reject_same_category, Arena *arena) {
             }
         }
     }
-    UnitType *types = arena_alloc(arena, length * sizeof(UnitType));
+    UnitBasic *types = arena_alloc(arena, length * sizeof(UnitBasic));
     int *degrees = arena_alloc(arena, length * sizeof(int));
     size_t curr_length = 0;
     for (size_t i = 0; i < a.length; i++) {

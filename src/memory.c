@@ -13,14 +13,42 @@
 typedef struct Memory Memory;
 struct Memory {
     HashMap vars; // string -> Expression
+    HashMap units; // string -> int
 };
 
 Memory memory_new(Arena *arena) {
-    return (Memory) { .vars = hash_map_new(sizeof(Expression), arena) };
+    return (Memory) {
+        .vars = hash_map_new(sizeof(Expression), arena),
+        .units = hash_map_new(sizeof(int), arena),
+    };
+}
+
+bool memory_contains_unit(Memory mem, unsigned char *unit_name) {
+    debug("Checking for unit: %s\n", unit_name);
+    for (size_t i = 0; i < mem.units.capacity; i++) {
+        if (mem.units.exists[i]) {
+            debug("Key: %s\n", mem.units.items[i].key);
+        }
+    }
+    bool result = hash_map_contains(mem.units, unit_name);
+    debug("found unit: %d\n", result);
+    return result;
+}
+
+void memory_add_unit(Memory *mem, unsigned char *unit_name, Arena *arena) {
+    assert(!memory_contains_unit(*mem, unit_name));
+    int unit_type = unit_type_user_min() + mem->units.size;
+    hash_map_insert(&mem->units, unit_name, (void *)&unit_type, arena);
+}
+
+const UnitBasic memory_get_unit(Memory mem, unsigned char *unit_name) {
+    assert(hash_map_contains(mem.units, (unsigned char *)unit_name));
+    int unit_type = *(int *)hash_map_get(mem.units, (unsigned char *)unit_name);
+    return (UnitBasic) { .type = unit_type, .name = (char *)unit_name };
 }
 
 void memory_add_var(Memory *mem, unsigned char *var_name, Expression value, Arena *arena) {
-    hash_map_insert(&mem->vars, (unsigned char *)var_name, (void *)&value, arena);
+    hash_map_insert(&mem->vars, var_name, (void *)&value, arena);
 }
 
 bool memory_contains_var(Memory mem, unsigned char *var_name) {
@@ -31,13 +59,13 @@ bool memory_contains_var(Memory mem, unsigned char *var_name) {
         }
     }
     bool result = hash_map_contains(mem.vars, (unsigned char *)var_name);
-    debug("found: %d\n", result);
+    debug("found var: %d\n", result);
     return result;
 }
 
 const Expression memory_get_var(Memory mem, unsigned char *var_name) {
-    assert(hash_map_contains(mem.vars, (unsigned char *)var_name));
-    return *(Expression *)hash_map_get(mem.vars, (unsigned char *)var_name);
+    assert(hash_map_contains(mem.vars, var_name));
+    return *(Expression *)hash_map_get(mem.vars, var_name);
 }
 
 String display_var(const unsigned char *var_name, const Expression value, bool newline, Arena *arena) {
@@ -53,6 +81,7 @@ String display_var(const unsigned char *var_name, const Expression value, bool n
     return string_empty(arena);
 }
 
+// Show all the variables in memory
 String memory_show(Memory mem, Arena *arena) {
     String s = string_empty(arena);
     size_t seen = 0;

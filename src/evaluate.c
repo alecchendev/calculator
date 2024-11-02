@@ -20,7 +20,27 @@ void substitute_variables(Expression *expr, Memory mem) {
         substitute_variables(expr->expr.binary_expr.left, mem);
         substitute_variables(expr->expr.binary_expr.right, mem);
     } else {
-        debug("No substitution for type: %s\n", display_expr_op(expr->type));
+        debug("No variable substitution for type: %s\n", display_expr_op(expr->type));
+    }
+}
+
+void substitute_units(Expression *expr, Memory mem, Arena *arena) {
+    unsigned char *unit_name = expr->expr.var_name;
+    if (expr->type == EXPR_VAR && memory_contains_unit(mem, unit_name)) {
+        debug("Substituting unit: %s\n", unit_name);
+        *expr = expr_new_unit(memory_get_unit(mem, unit_name), arena);
+    } else if (expr->type == EXPR_SET_VAR) {
+        debug("Substituting units for set var expr\n");
+        substitute_units(expr->expr.binary_expr.right, mem, arena);
+    } else if (expr->type == EXPR_NEG) {
+        debug("Substituting units for negation expr\n");
+        substitute_units(expr->expr.unary_expr.right, mem, arena);
+    } else if (expr_is_bin(expr->type)) {
+        debug("Substituting units for binary expr: %s\n", display_expr_op(expr->type));
+        substitute_units(expr->expr.binary_expr.left, mem, arena);
+        substitute_units(expr->expr.binary_expr.right, mem, arena);
+    } else {
+        debug("No unit substitution for type: %s\n", display_expr_op(expr->type));
     }
 }
 
@@ -163,7 +183,7 @@ bool unit_convert_valid(Unit a, Unit b, String *err, Arena *arena) {
     for (size_t i = 0; i < a.length; i++) {
         bool convertible = false;
         for (size_t j = 0; j < b.length; j++) {
-            if (unit_category(a.types[i]) == unit_category(b.types[j]) && a.degrees[i] == b.degrees[j]) {
+            if (unit_category(a.types[i].type) == unit_category(b.types[j].type) && a.degrees[i] == b.degrees[j]) {
                 convertible = true;
                 break;
             }
