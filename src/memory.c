@@ -97,3 +97,19 @@ String memory_show(Memory mem, Arena *arena) {
     return s;
 }
 
+String memory_show_units(Memory mem, Arena *arena) {
+    String s = string_new("User-defined: ", arena);
+    bool first = true;
+    for (size_t i = 0; i < mem.units.capacity; i++) {
+        if (mem.units.exists[i]) {
+            if (first) {
+                first = false;
+            } else {
+                s = string_concat_static(s, ", ", arena);
+            }
+            KeyValue item = mem.units.items[i];
+            s = string_concat_static(s, (char *)item.key, arena);
+        }
+    }
+    return s;
+}

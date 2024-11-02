@@ -18,7 +18,8 @@ and press enter:\n\n\
 help -> Shows this message\n\
 examples -> Shows example expressions\n\
 units -> Shows builtin units\n\
-memory -> Shows variables in memory";
+memory -> Shows variables in memory\n\
+addunit [unit] -> Adds a new unit";
 
 // TODO: more math
 const char examples_msg[] = "Math: 1 + 2 * 3 - 4 / 5\n\
@@ -27,6 +28,7 @@ Convert units: 10 m/s^2 -> km/h^2\n\
 Auto-convert units: 10 km - 2 m + 12 mi\n\
 Variables: x = 9 + 10\n\
 Unit aliases: n = kg m s^-2\n\
+User-defined units: addunit foo\n\
 See docs for more info.";
 
 bool execute_line_inner(const char *input, char *output, size_t output_len, Memory *mem, Arena *repl_arena, Arena *arena) {
@@ -49,7 +51,12 @@ bool execute_line_inner(const char *input, char *output, size_t output_len, Memo
         return false;
     }
     if (tokens.length == 1 && tokens.tokens[0].type == TOK_SHOW_UNITS) {
-        String units_str = show_all_units(arena);
+        String units_str = show_all_builtin_units(arena);
+        if (mem->units.size > 0) {
+            units_str = string_concat_static(units_str, "\n", arena);
+            String user_defined = memory_show_units(*mem, arena);
+            units_str = string_concat(units_str, user_defined, arena);
+        }
         memcpy(output, units_str.s, units_str.len);
         return false;
     }

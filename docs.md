@@ -97,6 +97,13 @@ alias like `n = kg m / s^2`, the answer would never print using `n`.
 
 You cannot set a bulitin unit as a variable/unit alias: km = lb
 
+### User defined units
+
+You can also define your own units: addunit liter
+
+For now you cannot define conversions between user defined units and
+other units, but otherwise they will compose with other units normally.
+
 ### All currently supported units
 
 Only the abbreviations are documented here, but full unit names are also supported,

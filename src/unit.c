@@ -186,7 +186,7 @@ UnitCategory unit_category(UnitType type) {
     }
 }
 
-String show_all_units(Arena *arena) {
+String show_all_builtin_units(Arena *arena) {
     String s = string_empty(arena);
     for (UnitCategory cat = 0; cat < UNIT_CATEGORY_NONE; cat++) {
         char *cat_str = (char *)unit_category_strings[cat];
