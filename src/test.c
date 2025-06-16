@@ -382,6 +382,11 @@ void test_invalid_expr(void *case_idx_opaque) {
     arena_free(&case_arena);
 }
 
+// TODO: test certain error responses
+// - 413000 / 299,792,458 currently outputs 'Invalid expression: Word is invalid in this context: "invalid"'
+// when it should output '...invalid in this context: ","'
+// - 4 hello currently outputs 'Expected to combine constant with unit, instead got left: const right: var'
+// when it should output 'Variable not defined: hello'
 
 typedef struct {
     const char *input;

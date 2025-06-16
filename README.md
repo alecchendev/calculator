@@ -41,6 +41,8 @@ Things I'd like to do at some point:
 - Add the rest of the of the [SI units](https://en.wikipedia.org/wiki/International_System_of_Units)
 - Add a bunch of builtin unit aliases like newtons, watts, mph
     - Somehow show results in simplified forms using unit aliases
+    - Would be cool to add non-physics unit stuff like storage/memory sizes (bytes, kb, mb, gb, tb)
+    - Other ideas: [unitconverters.net](unitconverters.net)
 - Add a bunch of builtin constants like G, pi
 - Support some more math/expressions like pow, log, parentheses
 - Allow custom units/conversions - user can define a unit and it's conversion to an existing unit in some linear equation
