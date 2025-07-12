@@ -241,7 +241,7 @@ double solve_x(SlopeIntercept mb, double y) {
     return (y - mb.b) / mb.m;
 }
 
-SlopeIntercept to_meters2(UnitType from) {
+SlopeIntercept to_meters(UnitType from) {
     switch (from) {
         case UNIT_CENTIMETER: return mb_new(0.01, 0);
         case UNIT_METER: return mb_new(1, 0);
@@ -255,7 +255,7 @@ SlopeIntercept to_meters2(UnitType from) {
     }
 }
 
-SlopeIntercept to_seconds2(UnitType from) {
+SlopeIntercept to_seconds(UnitType from) {
     switch (from) {
         case UNIT_SECOND: return mb_new(1, 0);
         case UNIT_MINUTE: return mb_new(60, 0);
@@ -266,7 +266,7 @@ SlopeIntercept to_seconds2(UnitType from) {
     }
 }
 
-SlopeIntercept to_kilograms2(UnitType from) {
+SlopeIntercept to_kilograms(UnitType from) {
     switch (from) {
         case UNIT_GRAM: return mb_new(0.001, 0);
         case UNIT_KILOGRAM: return mb_new(1, 0);
@@ -308,14 +308,14 @@ double unit_conversion(double value, UnitType from, UnitType to) {
     double meters, kilograms, seconds, kelvin;
     switch (cat_from) {
         case UNIT_CATEGORY_DISTANCE:
-            meters = solve_y(to_meters2(from), value);
-            return solve_x(to_meters2(to), meters);
+            meters = solve_y(to_meters(from), value);
+            return solve_x(to_meters(to), meters);
         case UNIT_CATEGORY_MASS:
-            kilograms = solve_y(to_kilograms2(from), value);
-            return solve_x(to_kilograms2(to), kilograms);
+            kilograms = solve_y(to_kilograms(from), value);
+            return solve_x(to_kilograms(to), kilograms);
         case UNIT_CATEGORY_TIME:
-            seconds = solve_y(to_seconds2(from), value);
-            return solve_x(to_seconds2(to), seconds);
+            seconds = solve_y(to_seconds(from), value);
+            return solve_x(to_seconds(to), seconds);
         case UNIT_CATEGORY_CURRENT:
             seconds = solve_y(to_amp(from), value);
             return solve_x(to_amp(to), seconds);
