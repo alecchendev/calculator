@@ -159,6 +159,7 @@ void test_tokenize(void *case_idx_opaque) {
             token_new_unit(UNIT_POUND)}},
         {"k K kelvin", 3, {token_new_unit(UNIT_KELVIN), token_new_unit(UNIT_KELVIN),
             token_new_unit(UNIT_KELVIN)}},
+        {"A a amp amps ampere", 5, {token_new_unit(UNIT_AMP), token_new_unit(UNIT_AMP), token_new_unit(UNIT_AMP), token_new_unit(UNIT_AMP), token_new_unit(UNIT_AMP)}},
         // TODO: more comprehensive
     };
     const size_t num_cases = sizeof(cases) / sizeof(TokenCase);
@@ -516,6 +517,8 @@ void test_evaluate(void *case_idx_opaque) {
         // Divide by zero
         {"1 / 0", 0, true},
         {"2 km / 0 mi", 0, true},
+        // Current
+        {"3.5 A -> A", 3.5, false},
         // Temperatures
         {"50 f -> c", (50 - 32) / 1.8, false},
         {"50 f^2 -> c^2", 191.80606791, false},
@@ -712,6 +715,7 @@ void test_display_unit(void *case_idx_opaque) {
         {unit_new_none(&arena), ""},
 #endif
         {unit_new_single_builtin(UNIT_MINUTE, 1, &arena), "min"},
+        {unit_new_single_builtin(UNIT_AMP, 1, &arena), "A"},
         {unit_new_single_builtin(UNIT_CENTIMETER, 2, &arena), "cm^2"},
         {unit_new_single_builtin(UNIT_KILOGRAM, -2, &arena), "kg^-2"},
         {unit_new_unknown(&arena), "unknown"},

@@ -29,6 +29,8 @@ enum UnitType {
     UNIT_KILOGRAM,
     UNIT_POUND,
     UNIT_OUNCE,
+    // Current
+    UNIT_AMP,
     // Temperature
     UNIT_KELVIN,
     UNIT_CELSIUS,
@@ -63,6 +65,8 @@ const char *builtin_unit_strings[] = {
     "kg",
     "lb",
     "oz",
+    // Current
+    "A",
     // Temperature
     "K",
     "C",
@@ -113,6 +117,7 @@ UnitType string_to_unit(char *s) {
     char *kgs[] = {"kg", "kilogram", "kilograms"};
     char *lbs[] = {"lb", "lbs", "pound", "pounds"};
     char *ozs[] = {"oz", "ozs", "ounce", "ounces"};
+    char *amps[] = {"A", "a", "amp", "amps", "ampere"};
     char *ks[] = {"K", "k", "kelvin"};
     char *cs[] = {"C", "c", "celsius"};
     char *fs[] = {"F", "f", "fahrenheit"};
@@ -129,6 +134,7 @@ UnitType string_to_unit(char *s) {
     if (string_in_set(s, kgs, 3)) return UNIT_KILOGRAM;
     if (string_in_set(s, lbs, 4)) return UNIT_POUND;
     if (string_in_set(s, ozs, 4)) return UNIT_OUNCE;
+    if (string_in_set(s, amps, 5)) return UNIT_AMP;
     if (string_in_set(s, ks, 3)) return UNIT_KELVIN;
     if (string_in_set(s, cs, 3)) return UNIT_CELSIUS;
     if (string_in_set(s, fs, 3)) return UNIT_FAHRENHEIT;
@@ -140,6 +146,7 @@ enum UnitCategory {
     UNIT_CATEGORY_DISTANCE,
     UNIT_CATEGORY_TIME,
     UNIT_CATEGORY_MASS,
+    UNIT_CATEGORY_CURRENT,
     UNIT_CATEGORY_TEMPERATURE,
     UNIT_CATEGORY_NONE,
 };
@@ -148,6 +155,7 @@ const char *unit_category_strings[] = {
     "Distance",
     "Time",
     "Mass",
+    "Current",
     "Temperature",
     "none",
 };
@@ -170,6 +178,8 @@ UnitCategory unit_category(UnitType type) {
         case UNIT_POUND:
         case UNIT_OUNCE:
             return UNIT_CATEGORY_MASS;
+        case UNIT_AMP:
+            return UNIT_CATEGORY_CURRENT;
         case UNIT_KELVIN:
         case UNIT_CELSIUS:
         case UNIT_FAHRENHEIT:
@@ -268,6 +278,15 @@ SlopeIntercept to_kilograms2(UnitType from) {
     }
 }
 
+SlopeIntercept to_amp(UnitType from) {
+    switch (from) {
+        case UNIT_AMP: return mb_new(1, 0);
+        default:
+            assert(false);
+            return mb_new(0, 0);
+    }
+}
+
 SlopeIntercept to_kelvin(UnitType from) {
     switch (from) {
         case UNIT_KELVIN: return mb_new(1, 0);
@@ -297,6 +316,9 @@ double unit_conversion(double value, UnitType from, UnitType to) {
         case UNIT_CATEGORY_TIME:
             seconds = solve_y(to_seconds2(from), value);
             return solve_x(to_seconds2(to), seconds);
+        case UNIT_CATEGORY_CURRENT:
+            seconds = solve_y(to_amp(from), value);
+            return solve_x(to_amp(to), seconds);
         case UNIT_CATEGORY_TEMPERATURE:
             kelvin = solve_y(to_kelvin(from), value);
             return solve_x(to_kelvin(to), kelvin);
