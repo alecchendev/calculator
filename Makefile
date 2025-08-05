@@ -41,7 +41,7 @@ test: build-test
 	build/test $(ARGS)
 
 wasm:
-	emcc src/lib.c -o website/lib.js -s EXPORTED_FUNCTIONS='["_exported_execute_line"]' -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]'
+	emcc src/lib.c -o website/lib.js -s EXPORTED_FUNCTIONS='["_exported_execute_line"]' -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "HEAPU8"]' || echo 'If this failed you may need to run `emsdk_setup`'
 
 deploy:
 	git checkout gh-pages
