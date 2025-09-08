@@ -47,3 +47,4 @@ Things I'd like to do at some point:
 - Support some more math/expressions like pow, log, parentheses
 - Allow custom units/conversions - user can define a unit and it's conversion to an existing unit in some linear equation
 - Syntax highlighting and autocompletion in the prompt
+- BUG: Unit division of same category is broken, e.g. `60 s / 60 s/min` should result in `1 min` but instead results in `1 s`
